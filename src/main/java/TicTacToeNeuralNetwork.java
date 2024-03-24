@@ -37,9 +37,17 @@ public class TicTacToeNeuralNetwork {
         double[] board = new double[9]; // Początkowy stan planszy
 
         while (true) {
+            int move;
             // Gracz wprowadza ruch
             System.out.println("Podaj współrzędne ruchu (0-8): ");
-            int move = scanner.nextInt();
+            do {
+                move = scanner.nextInt();
+                if (move < 0 || move > 8) {
+                    System.out.println("Nieprawidłowy ruch. Podaj współrzędne ruchu (0-8): ");
+                } else if (!isValidMove(board, move)) {
+                    System.out.println("To pole jest już zajęte. Podaj współrzędne ruchu (0-8): ");
+                }
+            } while (!isValidMove(board, move)); // Sprawdzanie, czy ruch jest poprawny (pole jest puste
             board[move] = 1; // Zakładamy, że gracz jest reprezentowany przez 1
 
             // Wyświetlanie planszy

@@ -1,13 +1,14 @@
 import org.encog.Encog;
 import org.encog.engine.network.activation.ActivationSigmoid;
 import org.encog.ml.data.MLData;
+import org.encog.ml.data.MLDataSet;
 import org.encog.ml.data.basic.BasicMLData;
 import org.encog.ml.data.basic.BasicMLDataSet;
 import org.encog.neural.networks.BasicNetwork;
 import org.encog.neural.networks.layers.BasicLayer;
 import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
 
-import java.util.Scanner;
+import java.util.*;
 
 public class TicTacToeNeuralNetwork {
     // Metoda do wizualizacji planszy
@@ -29,6 +30,70 @@ public class TicTacToeNeuralNetwork {
 
     public static boolean isValidMove(double[] board, int move) {
         return board[move] == 0;
+    }
+
+    private static double[][] convertListToArray(List<double[]> list) {
+        double[][] array = new double[list.size()][];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
+    }
+
+    // Metoda do trenowania sieci neuronowej
+    public static void trainingNetwork(BasicNetwork network, int robotPlayer) {
+        for (int p0 = 0; p0 < 9; p0++) {
+            for (int p1 = 0; p1 < 9; p1++) {
+                if (p0 == p1) {
+                    continue;
+                }
+                int player = 1;
+                List<double[]> inputSet = new ArrayList<>();
+                List<double[]> outputSet = new ArrayList<>();
+                double[] board = new double[9];
+                board[p0] = player;
+                board[p1] = -player;
+                do {
+                    for (int j = 0; j < 9; j++) {
+                        if (isValidMove(board, j)) {
+                            if (player == robotPlayer) {
+                                inputSet.add(board);
+//                            System.out.println("Sytuacja na planszy:");
+//                            displayBoard(board);
+                                double[] convertTable = new double[9];
+                                convertTable[j] = player;
+                                outputSet.add(convertTable);
+//                            System.out.println("Ruch robota:");
+//                            displayBoard(convertTable);
+                            }
+                            board[j] = player;
+                            break;
+                        }
+                    }
+                    player = -player;
+                } while (!checkWin(board, 1) && !checkWin(board, -1) && !isBoardFull(board));
+                if (checkWin(board, robotPlayer) || isBoardFull(board)) {
+                    if (checkWin(board, robotPlayer)) {
+                        System.out.println("Wygrał robot! Dodaje dane do sieci");
+                    } else {
+                        System.out.println("Remis! Dodaje dane do sieci");
+                    }
+                    System.out.println("Wygrał robot! Dodaje dane do sieci");
+                    BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(inputSet), convertListToArray(outputSet));
+                    final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
+                    int epoch = 1;
+                    do {
+                        train.iteration();
+                        System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
+                        epoch++;
+                    } while (train.getError() > 0.01);
+                }
+                if (checkWin(board, -robotPlayer)) {
+                    System.out.println("Wygrał gracz! Nie dodaje danych do sieci");
+                }
+            }
+        }
+        System.out.println("Trenowanie zakończone!");
     }
 
     // Metoda do gry
@@ -90,6 +155,15 @@ public class TicTacToeNeuralNetwork {
         return bestMove;
     }
 
+    private static boolean isBoardFull(double[] board) {
+        for (double v : board) {
+            if (v == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static boolean checkWin(double[] board, int i) {
         // Sprawdzanie wierszy
         for (int j = 0; j < 3; j++) {
@@ -143,6 +217,9 @@ public class TicTacToeNeuralNetwork {
             System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
             epoch++;
         } while (train.getError() > 0.01);
+
+        // Trenowanie sieci
+        trainingNetwork(network, -1);
 
         // Testowanie sieci
         MLData inputMLData = new BasicMLData(input[0]);

@@ -27,6 +27,10 @@ public class TicTacToeNeuralNetwork {
         System.out.println();
     }
 
+    public static boolean isValidMove(double[] board, int move) {
+        return board[move] == 0;
+    }
+
     // Metoda do gry
     public static void playGame(BasicNetwork network) {
         Scanner scanner = new Scanner(System.in);
@@ -121,6 +125,15 @@ public class TicTacToeNeuralNetwork {
                 {0, 0, 0, 0, 0, 0, 1, 0, 0}, // Krzyżyk w lewym dolnym rogu
                 {0, 0, 0, 0, 0, 0, 0, 1, 0}, // Krzyżyk na dole na środku
                 {0, 0, 0, 0, 0, 0, 0, 0, 1}, // Krzyżyk w prawym dolnym rogu
+                {1, 0, 0, 0, -1, 0, 0, 0, 0}, // Krzyżyk w lewym górnym rogu
+                {0, 1, 0, 0, -1, 0, 0, 0, 0}, // Krzyżyk na górze na środku
+                {0, 0, 1, 0, -1, 0, 0, 0, 0}, // Krzyżyk w prawym górnym rogu
+                {0, 0, 0, 1, -1, 0, 0, 0, 0}, // Krzyżyk w lewym środku
+                {-1, 0, 0, 0, 1, 0, 0, 0, 0}, // Krzyżyk na środku
+                {0, 0, 0, 0, -1, 1, 0, 0, 0}, // Krzyżyk w prawym środku
+                {0, 0, 0, 0, -1, 0, 1, 0, 0}, // Krzyżyk w lewym dolnym rogu
+                {0, 0, 0, 0, -1, 0, 0, 1, 0}, // Krzyżyk na dole na środku
+                {0, 0, 0, 0, -1, 0, 0, 0, 1}, // Krzyżyk w prawym dolnym rogu
         };
 
         final ResilientPropagation train = getResilientPropagation(input, network);
@@ -157,13 +170,21 @@ public class TicTacToeNeuralNetwork {
                 {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
                 {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
                 {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {0, 1, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {0, 1, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
+                {1, 0, 0, 0, 0, 0, 0, 0, 0},
         };
 
         // Przygotowanie danych treningowych
         BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
 
         // Trenowanie sieci
-        ResilientPropagation train = new ResilientPropagation(network, trainingSet);
-        return train;
+        return new ResilientPropagation(network, trainingSet);
     }
 }

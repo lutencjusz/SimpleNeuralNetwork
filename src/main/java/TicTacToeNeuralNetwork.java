@@ -105,6 +105,16 @@ public class TicTacToeNeuralNetwork {
     }
 
     public static void main(String[] args) {
+
+        DataIO dataIO = new DataIO();
+        double[][] input;
+        double[][] output;
+
+//        // Generowanie i zapis danych treningowych
+//        dataIO.generateDataIO();
+//        dataIO.saveOutputData("nOutput.dat");
+//        dataIO.saveInputData("nInput.dat");
+
         // Tworzenie sieci neuronowej
         BasicNetwork network = new BasicNetwork();
         network.addLayer(new BasicLayer(null, true, 9)); // 9 wejść (3x3 plansza)
@@ -113,30 +123,12 @@ public class TicTacToeNeuralNetwork {
         network.getStructure().finalizeStructure();
         network.reset();
 
-        // Dane treningowe (plansze i oczekiwane wyjścia)
-        double[][] input = {
-                {0, 0, 0, 0, 0, 0, 0, 0, 0}, // Pusta plansza
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Krzyżyk w lewym górnym rogu
-                {0, 1, 0, 0, 0, 0, 0, 0, 0}, // Krzyżyk na górze na środku
-                {0, 0, 1, 0, 0, 0, 0, 0, 0}, // Krzyżyk w prawym górnym rogu
-                {0, 0, 0, 1, 0, 0, 0, 0, 0}, // Krzyżyk w lewym środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Krzyżyk na środku
-                {0, 0, 0, 0, 0, 1, 0, 0, 0}, // Krzyżyk w prawym środku
-                {0, 0, 0, 0, 0, 0, 1, 0, 0}, // Krzyżyk w lewym dolnym rogu
-                {0, 0, 0, 0, 0, 0, 0, 1, 0}, // Krzyżyk na dole na środku
-                {0, 0, 0, 0, 0, 0, 0, 0, 1}, // Krzyżyk w prawym dolnym rogu
-                {1, 0, 0, 0, -1, 0, 0, 0, 0}, // Krzyżyk w lewym górnym rogu
-                {0, 1, 0, 0, -1, 0, 0, 0, 0}, // Krzyżyk na górze na środku
-                {0, 0, 1, 0, -1, 0, 0, 0, 0}, // Krzyżyk w prawym górnym rogu
-                {0, 0, 0, 1, -1, 0, 0, 0, 0}, // Krzyżyk w lewym środku
-                {-1, 0, 0, 0, 1, 0, 0, 0, 0}, // Krzyżyk na środku
-                {0, 0, 0, 0, -1, 1, 0, 0, 0}, // Krzyżyk w prawym środku
-                {0, 0, 0, 0, -1, 0, 1, 0, 0}, // Krzyżyk w lewym dolnym rogu
-                {0, 0, 0, 0, -1, 0, 0, 1, 0}, // Krzyżyk na dole na środku
-                {0, 0, 0, 0, -1, 0, 0, 0, 1}, // Krzyżyk w prawym dolnym rogu
-        };
+        input = dataIO.loadInputData("nInput.dat");
+        output = dataIO.loadOutputData("nOutput.dat");
 
-        final ResilientPropagation train = getResilientPropagation(input, network);
+        // Przygotowanie danych treningowych
+        BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
+        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
         int epoch = 1;
         do {
             train.iteration();
@@ -156,35 +148,5 @@ public class TicTacToeNeuralNetwork {
         playGame(network);
 
         Encog.getInstance().shutdown();
-    }
-
-    private static ResilientPropagation getResilientPropagation(double[][] input, BasicNetwork network) {
-        double[][] output = {
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 0, 0, 0, 1, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 1, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {0, 1, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
-                {1, 0, 0, 0, 0, 0, 0, 0, 0},
-        };
-
-        // Przygotowanie danych treningowych
-        BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
-
-        // Trenowanie sieci
-        return new ResilientPropagation(network, trainingSet);
     }
 }

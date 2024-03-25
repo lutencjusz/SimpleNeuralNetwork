@@ -1,7 +1,6 @@
 import org.encog.Encog;
 import org.encog.engine.network.activation.ActivationSigmoid;
 import org.encog.ml.data.MLData;
-import org.encog.ml.data.MLDataSet;
 import org.encog.ml.data.basic.BasicMLData;
 import org.encog.ml.data.basic.BasicMLDataSet;
 import org.encog.neural.networks.BasicNetwork;
@@ -11,6 +10,8 @@ import org.encog.neural.networks.training.propagation.resilient.ResilientPropaga
 import java.util.*;
 
 public class TicTacToeNeuralNetwork {
+
+    static final double VALUE = 1;
     // Metoda do wizualizacji planszy
     public static void displayBoard(double[] board) {
         for (int i = 0; i < 9; i++) {
@@ -40,56 +41,80 @@ public class TicTacToeNeuralNetwork {
         return array;
     }
 
+    private static double[] convertNumberToArray(int number, double value) {
+        double[] array = new double[9];
+        array[number] = value;
+        return array;
+    }
+
     // Metoda do trenowania sieci neuronowej
     public static void trainingNetwork(BasicNetwork network, int robotPlayer) {
+        int p1 = 5;
         for (int p0 = 0; p0 < 9; p0++) {
-            for (int p1 = 0; p1 < 9; p1++) {
-                if (p0 == p1) {
-                    continue;
-                }
-                int player = 1;
-                List<double[]> inputSet = new ArrayList<>();
-                List<double[]> outputSet = new ArrayList<>();
-                double[] board = new double[9];
-                board[p0] = player;
-                board[p1] = -player;
-                do {
-                    for (int j = 0; j < 9; j++) {
-                        if (isValidMove(board, j)) {
-                            if (player == robotPlayer) {
-                                inputSet.add(board);
+            if (p0 == 5) p1 = 0;
+            for (int p2 = 0; p2 < 9; p2++) {
+                for (int p3 = 0; p3 < 9; p3++) {
+                    for (int p4 = 0; p4 < 9; p4++) {
+                        int player = -1;
+                        // kontrola czy nie ma powtórzeń
+                        Set<Integer> sumControl = new HashSet<>();
+                        sumControl.add(p0);
+                        sumControl.add(p1);
+                        sumControl.add(p2);
+                        sumControl.add(p3);
+                        sumControl.add(p4);
+                        if (sumControl.size() < 5) {
+                            continue;
+                        }
+                        List<double[]> inputSet = new ArrayList<>();
+                        List<double[]> outputSet = new ArrayList<>();
+                        double[] board = new double[9];
+                        // Ustawienie początkowego stanu planszy
+                        board[p0] = -robotPlayer;
+                        inputSet.add(board.clone());
+                        outputSet.add(convertNumberToArray(p1, VALUE));
+                        board[p1] = robotPlayer;
+                        board[p2] = -robotPlayer;
+                        inputSet.add(board.clone());
+                        outputSet.add(convertNumberToArray(p3, VALUE));
+                        board[p3] = robotPlayer;
+                        board[p4] = -robotPlayer;
+                        do {
+                            for (int j = 0; j < 9; j++) {
+                                if (isValidMove(board, j)) {
+                                    if (player == robotPlayer) {
+                                        inputSet.add(board.clone());
 //                            System.out.println("Sytuacja na planszy:");
 //                            displayBoard(board);
-                                double[] convertTable = new double[9];
-                                convertTable[j] = player;
-                                outputSet.add(convertTable);
+                                        outputSet.add(convertNumberToArray(j, VALUE));
 //                            System.out.println("Ruch robota:");
 //                            displayBoard(convertTable);
+                                    }
+                                    board[j] = player;
+                                    break;
+                                }
                             }
-                            board[j] = player;
-                            break;
+                            player = -player;
+                        } while (!checkWin(board, 1) && !checkWin(board, -1) && !isBoardFull(board));
+                        if (checkWin(board, robotPlayer) || isBoardFull(board)) {
+                            if (checkWin(board, robotPlayer)) {
+                                System.out.println("Wygrał robot! Dodaje dane do sieci, epoka#" + p0);
+                            } else {
+                                System.out.println("Remis! Dodaje dane do sieci, epoka#" + p0);
+                            }
+                            BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(inputSet), convertListToArray(outputSet));
+                            final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
+                            int epoch = 1;
+                            do {
+                                train.iteration();
+                                System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
+                                epoch++;
+                            } while (train.getError() > 0.1);
+                        }
+                        if (checkWin(board, -robotPlayer)) {
+                            System.out.println("Wygrał gracz! Nie dodaje danych do sieci");
                         }
                     }
-                    player = -player;
-                } while (!checkWin(board, 1) && !checkWin(board, -1) && !isBoardFull(board));
-                if (checkWin(board, robotPlayer) || isBoardFull(board)) {
-                    if (checkWin(board, robotPlayer)) {
-                        System.out.println("Wygrał robot! Dodaje dane do sieci");
-                    } else {
-                        System.out.println("Remis! Dodaje dane do sieci");
-                    }
-                    System.out.println("Wygrał robot! Dodaje dane do sieci");
-                    BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(inputSet), convertListToArray(outputSet));
-                    final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
-                    int epoch = 1;
-                    do {
-                        train.iteration();
-                        System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
-                        epoch++;
-                    } while (train.getError() > 0.01);
-                }
-                if (checkWin(board, -robotPlayer)) {
-                    System.out.println("Wygrał gracz! Nie dodaje danych do sieci");
                 }
             }
         }
@@ -100,7 +125,7 @@ public class TicTacToeNeuralNetwork {
     public static void playGame(BasicNetwork network) {
         Scanner scanner = new Scanner(System.in);
         double[] board = new double[9]; // Początkowy stan planszy
-
+        displayBoard(board);
         while (true) {
             int move;
             // Gracz wprowadza ruch
@@ -189,7 +214,7 @@ public class TicTacToeNeuralNetwork {
     public static void main(String[] args) {
 
         DataIO dataIO = new DataIO();
-        double[][] input;
+        double[][] input = new double[0][9];
         double[][] output;
 
 //        // Generowanie i zapis danych treningowych
@@ -201,33 +226,32 @@ public class TicTacToeNeuralNetwork {
         BasicNetwork network = new BasicNetwork();
         network.addLayer(new BasicLayer(null, true, 9)); // 9 wejść (3x3 plansza)
         network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 36)); // Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 72)); // Warstwa ukryta z 18 neuronami
         network.addLayer(new BasicLayer(new ActivationSigmoid(), false, 9)); // 9 wyjść (3x3 plansza)
         network.getStructure().finalizeStructure();
         network.reset();
 
-        input = dataIO.loadInputData("nInput.dat");
-        output = dataIO.loadOutputData("nOutput.dat");
-
-        // Przygotowanie danych treningowych
-        BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
-        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
-        int epoch = 1;
-        do {
-            train.iteration();
-            System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
-            epoch++;
-        } while (train.getError() > 0.01);
+//        input = dataIO.loadInputData("nInput.dat");
+//        output = dataIO.loadOutputData("nOutput.dat");
+//
+//        // Przygotowanie danych treningowych
+//        BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
+//        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
+//        int epoch = 1;
+//        do {
+//            train.iteration();
+//            System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
+//            epoch++;
+//        } while (train.getError() > 0.01);
 
         // Trenowanie sieci
         trainingNetwork(network, -1);
 
-        // Testowanie sieci
-        MLData inputMLData = new BasicMLData(input[0]);
-        MLData outputMLData = network.compute(inputMLData);
-        System.out.println("Wynik: " + outputMLData.getData(4)); // Przykładowe pole na planszy
-
-        // Wyświetlanie planszy
-        displayBoard(input[0]);
+//        // Testowanie sieci
+//        MLData inputMLData = new BasicMLData(input[0]);
+//        MLData outputMLData = network.compute(inputMLData);
+//        System.out.println("Wynik: " + outputMLData.getData(4)); // Przykładowe pole na planszy
 
         // Rozpoczęcie gry
         playGame(network);

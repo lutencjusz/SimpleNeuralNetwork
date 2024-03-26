@@ -6,12 +6,22 @@ import org.encog.ml.data.basic.BasicMLDataSet;
 import org.encog.neural.networks.BasicNetwork;
 import org.encog.neural.networks.layers.BasicLayer;
 import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
+import me.tongfei.progressbar.*;
+import org.encog.persist.EncogDirectoryPersistence;
 
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class TicTacToeNeuralNetwork {
 
-    static final double VALUE = 1;
+    static List<double[]> finalInputSet = new ArrayList<>();
+    static List<double[]> finalOutputSet = new ArrayList<>();
+    static final double VALUE = 0.9;
+
     // Metoda do wizualizacji planszy
     public static void displayBoard(double[] board) {
         for (int i = 0; i < 9; i++) {
@@ -102,14 +112,10 @@ public class TicTacToeNeuralNetwork {
                             } else {
                                 System.out.println("Remis! Dodaje dane do sieci, epoka#" + p0);
                             }
-                            BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(inputSet), convertListToArray(outputSet));
-                            final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
-                            int epoch = 1;
-                            do {
-                                train.iteration();
-                                System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
-                                epoch++;
-                            } while (train.getError() > 0.1);
+                            // Dodanie danych z gry do danych testowych
+                            finalInputSet.addAll(inputSet);
+                            finalOutputSet.addAll(outputSet);
+
                         }
                         if (checkWin(board, -robotPlayer)) {
                             System.out.println("Wygrał gracz! Nie dodaje danych do sieci");
@@ -211,7 +217,7 @@ public class TicTacToeNeuralNetwork {
         return board[2] == i && board[4] == i && board[6] == i;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         DataIO dataIO = new DataIO();
         double[][] input = new double[0][9];
@@ -225,28 +231,41 @@ public class TicTacToeNeuralNetwork {
         // Tworzenie sieci neuronowej
         BasicNetwork network = new BasicNetwork();
         network.addLayer(new BasicLayer(null, true, 9)); // 9 wejść (3x3 plansza)
-        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami
-        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 36)); // Warstwa ukryta z 18 neuronami
-        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 72)); // Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
         network.addLayer(new BasicLayer(new ActivationSigmoid(), false, 9)); // 9 wyjść (3x3 plansza)
         network.getStructure().finalizeStructure();
         network.reset();
 
+        // Zbieranie danych do trenowania sieci
+        trainingNetwork(network, -1);
+
 //        input = dataIO.loadInputData("nInput.dat");
 //        output = dataIO.loadOutputData("nOutput.dat");
 //
-//        // Przygotowanie danych treningowych
-//        BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
-//        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
-//        int epoch = 1;
-//        do {
-//            train.iteration();
-//            System.out.println("Epoka #" + epoch + ", Błąd: " + train.getError());
-//            epoch++;
-//        } while (train.getError() > 0.01);
+        // Przygotowanie danych treningowych
+        BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
+        int epoch = 1;
+        LocalDateTime start = LocalDateTime.now();
+        LocalDateTime end = start.plusMinutes(5);
+        try (ProgressBar pb = new ProgressBar("Trening", 100)) {
+            do {
+                train.iteration();
+                Thread.sleep(10);
+                if (epoch++ % 100 == 0) {
+                    Double a = train.getError() * 100;
+                    BigDecimal bd = new BigDecimal(Double.toString(train.getError()));
+                    bd = bd.setScale(4, RoundingMode.HALF_UP);
+                    pb.stepTo(a.longValue());
+                    pb.setExtraMessage("E: " + epoch/1000 + "K, " + bd.doubleValue());
+                }
+            } while (train.getError() > 0.01 && LocalDateTime.now().isBefore(end));
+            train.finishTraining();
+        }
 
-        // Trenowanie sieci
-        trainingNetwork(network, -1);
+        // Zapisanie sieci
+        EncogDirectoryPersistence.saveObject(new File("tictactoe.eg"), network);
+
 
 //        // Testowanie sieci
 //        MLData inputMLData = new BasicMLData(input[0]);

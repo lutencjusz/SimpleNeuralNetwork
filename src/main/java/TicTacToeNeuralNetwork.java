@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class TicTacToeNeuralNetwork {
-
+    static List<DataModel> dataModel = new ArrayList<>();
     static List<double[]> finalInputSet = new ArrayList<>();
     static List<double[]> finalOutputSet = new ArrayList<>();
-    static final double VALUE = 0.9;
+    static final double VALUE = 1;
 
     // Metoda do wizualizacji planszy
     public static void displayBoard(double[] board) {
@@ -106,7 +106,7 @@ public class TicTacToeNeuralNetwork {
                             }
                             player = -player;
                         } while (!checkWin(board, 1) && !checkWin(board, -1) && !isBoardFull(board));
-                        if (checkWin(board, robotPlayer) || isBoardFull(board)) {
+                        if (checkWin(board, robotPlayer)) {
                             if (checkWin(board, robotPlayer)) {
                                 System.out.println("Wygrał robot! Dodaje dane do sieci, epoka#" + p0);
                             } else {
@@ -124,7 +124,17 @@ public class TicTacToeNeuralNetwork {
                 }
             }
         }
-        System.out.println("Trenowanie zakończone!");
+        System.out.println("Przygotowanie danych zakończone!");
+        convertArraysToDataModel(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+        System.out.println("Konwersja do JSON zakończona!");
+
+    }
+
+    public static void convertArraysToDataModel(double[][] input, double[][] output) {
+        for (int i = 0; i < input.length; i++) {
+            DataModel newModel = new DataModel(input[i], output[i]);
+            dataModel.add(newModel);
+        }
     }
 
     // Metoda do gry
@@ -219,6 +229,8 @@ public class TicTacToeNeuralNetwork {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
+        final int TIME_OF_TRAINING_IN_MINUTES = 10;
+
         DataIO dataIO = new DataIO();
         double[][] input = new double[0][9];
         double[][] output;
@@ -232,6 +244,10 @@ public class TicTacToeNeuralNetwork {
         BasicNetwork network = new BasicNetwork();
         network.addLayer(new BasicLayer(null, true, 9)); // 9 wejść (3x3 plansza)
         network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
         network.addLayer(new BasicLayer(new ActivationSigmoid(), false, 9)); // 9 wyjść (3x3 plansza)
         network.getStructure().finalizeStructure();
         network.reset();
@@ -239,6 +255,8 @@ public class TicTacToeNeuralNetwork {
         // Zbieranie danych do trenowania sieci
         trainingNetwork(network, -1);
 
+        // Zapisanie danych do pliku
+//        dataIO.saveDataToFileInJSON("data.json", dataModel);
 //        input = dataIO.loadInputData("nInput.dat");
 //        output = dataIO.loadOutputData("nOutput.dat");
 //
@@ -247,7 +265,7 @@ public class TicTacToeNeuralNetwork {
         final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
         int epoch = 1;
         LocalDateTime start = LocalDateTime.now();
-        LocalDateTime end = start.plusMinutes(5);
+        LocalDateTime end = start.plusMinutes(TIME_OF_TRAINING_IN_MINUTES);
         try (ProgressBar pb = new ProgressBar("Trening", 100)) {
             do {
                 train.iteration();
@@ -257,9 +275,12 @@ public class TicTacToeNeuralNetwork {
                     BigDecimal bd = new BigDecimal(Double.toString(train.getError()));
                     bd = bd.setScale(4, RoundingMode.HALF_UP);
                     pb.stepTo(a.longValue());
-                    pb.setExtraMessage("E: " + epoch/1000 + "K, " + bd.doubleValue());
+                    pb.setExtraMessage("E: " + epoch / 1000 + "K, " + bd.doubleValue()+ " minęło: "+ (LocalDateTime.now().getMinute() - start.getMinute()) + " minut.");
                 }
             } while (train.getError() > 0.01 && LocalDateTime.now().isBefore(end));
+            if (LocalDateTime.now().isAfter(end)){
+                System.out.println("Przekroczono czas treningu, który wynosił " + TIME_OF_TRAINING_IN_MINUTES + " minut.");
+            }
             train.finishTraining();
         }
 

@@ -38,6 +38,7 @@ public class DataIO {
                 {0, 0, 0, 0, -1, 0, 1, 0, 0}, // Krzyżyk w lewym dolnym rogu
                 {0, 0, 0, 0, -1, 0, 0, 1, 0}, // Krzyżyk na dole na środku
                 {0, 0, 0, 0, -1, 0, 0, 0, 1}, // Krzyżyk w prawym dolnym rogu
+                {1, 0, 0, 0, -1, 0, 0, 0, 1},
         };
 
         output = new double[][]{
@@ -60,6 +61,7 @@ public class DataIO {
                 {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
                 {1, 0, 0, 0, 0, 0, 0, 0, 0}, // Oczekiwane wyjście dla krzyżyka na środku
                 {1, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0}
         };
     }
 

@@ -1,9 +1,19 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DataIO {
 
     double[][] input;
     double[][] output;
+
+    List<DataModel> dataModels = new ArrayList<>();
 
     public void generateDataIO() {
 
@@ -86,6 +96,49 @@ public class DataIO {
             fileOut.close();
         } catch (IOException i) {
             System.out.println("Błąd przy zapisie: " + i.getMessage());
+        }
+    }
+
+    public void saveDataToFileInJSON(String filename, List<DataModel> data) {
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            // Zapis do pliku
+            mapper.writeValue(new File(filename), data);
+        } catch (IOException e) {
+            System.out.println("Błąd przy zapisie: " + e.getMessage());
+        }
+    }
+
+    public static void addDataToFileInJSON(String filename, List<DataModel> newData) {
+        Gson gson = new Gson();
+        List<DataModel> allData = new ArrayList<>();
+
+        try {
+            // Sprawdzenie czy plik istnieje
+            if (Files.exists(Paths.get(filename))) {
+                // Odczytanie danych z pliku i zdeserializowanie do listy obiektów DataModel
+                String fileContent = new String(Files.readAllBytes(Paths.get(filename)));
+                DataModel[] existingDataArray = gson.fromJson(fileContent, DataModel[].class);
+                allData.addAll(List.of(existingDataArray));
+            }
+
+            // Dodanie nowych danych do listy
+            allData.addAll(newData);
+
+            // Konwersja listy obiektów na format JSON
+            String jsonData = gson.toJson(allData);
+
+            // Zapis danych do pliku
+            FileWriter writer = new FileWriter(filename);
+            writer.write(jsonData);
+            writer.close();
+
+            System.out.println("Dane zostały dodane do pliku JSON.");
+
+        } catch (IOException e) {
+            System.err.println("Wystąpił błąd podczas zapisywania danych do pliku.");
+            System.out.println(e.getMessage());
         }
     }
 

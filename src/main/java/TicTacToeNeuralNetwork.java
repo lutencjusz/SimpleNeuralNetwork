@@ -1,26 +1,16 @@
 import org.encog.Encog;
 import org.encog.engine.network.activation.ActivationSigmoid;
-import org.encog.ml.data.MLData;
-import org.encog.ml.data.basic.BasicMLData;
-import org.encog.ml.data.basic.BasicMLDataSet;
 import org.encog.neural.networks.BasicNetwork;
 import org.encog.neural.networks.layers.BasicLayer;
-import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
-import me.tongfei.progressbar.*;
-import org.encog.persist.EncogDirectoryPersistence;
 
-import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.*;
 
 public class TicTacToeNeuralNetwork {
     static List<DataModel> dataModel = new ArrayList<>();
     static List<double[]> finalInputSet = new ArrayList<>();
     static List<double[]> finalOutputSet = new ArrayList<>();
-    static final double VALUE = 1;
+    static final double VALUE = -1;
 
     // Metoda do wizualizacji planszy
     public static void displayBoard(double[] board) {
@@ -59,9 +49,9 @@ public class TicTacToeNeuralNetwork {
 
     // Metoda do trenowania sieci neuronowej
     public static void trainingNetwork(BasicNetwork network, int robotPlayer) {
-        int p1 = 5;
+        int p1 = 4;
         for (int p0 = 0; p0 < 9; p0++) {
-            if (p0 == 5) p1 = 0;
+            if (p0 == 4) p1 = 0;
             for (int p2 = 0; p2 < 9; p2++) {
                 for (int p3 = 0; p3 < 9; p3++) {
                     for (int p4 = 0; p4 < 9; p4++) {
@@ -139,6 +129,7 @@ public class TicTacToeNeuralNetwork {
 
     // Metoda do gry
     public static void playGame(BasicNetwork network) {
+        int player = 1;
         Scanner scanner = new Scanner(System.in);
         double[] board = new double[9]; // Początkowy stan planszy
         displayBoard(board);
@@ -154,34 +145,46 @@ public class TicTacToeNeuralNetwork {
                     System.out.println("To pole jest już zajęte. Podaj współrzędne ruchu (0-8): ");
                 }
             } while (!isValidMove(board, move)); // Sprawdzanie, czy ruch jest poprawny (pole jest puste
-            board[move] = 1; // Zakładamy, że gracz jest reprezentowany przez 1
+            if (player == -1) {
+                finalInputSet.add(board.clone());
+                finalOutputSet.add(convertNumberToArray(move, VALUE));
+            }
+
+            board[move] = player; // Zakładamy, że gracz jest reprezentowany przez 1
 
             // Wyświetlanie planszy
             displayBoard(board);
 
             // Sprawdzanie, czy gracz wygrał
-            if (checkWin(board, 1)) {
-                System.out.println("Wygrałeś!");
+            if (checkWin(board, player) || isBoardFull(board)) {
+                System.out.println("Wygrałeś lub remis! Koniec gry.");
+                System.out.println("Czy zapisać dane z gry do sieci? (t/n)");
+                String saveData = scanner.next();
+                if (saveData.equals("t")) {
+                    convertArraysToDataModel(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+                    DataIO.addDataToFileInJSON("dataWin.json", dataModel);
+                }
                 break;
             }
 
             // Sieć neuronowa oblicza ruch
-            MLData inputMLData = new BasicMLData(board);
-            MLData outputMLData = network.compute(inputMLData);
-            int networkMove = getBestMove(outputMLData.getData());
-            board[networkMove] = -1; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
+//            MLData inputMLData = new BasicMLData(board);
+//            MLData outputMLData = network.compute(inputMLData);
+//            int networkMove = getBestMove(outputMLData.getData());
+//            board[networkMove] = -1; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
 
             // Wyświetlanie planszy
             displayBoard(board);
 
             // Sprawdzanie, czy sieć neuronowa wygrała
-            if (checkWin(board, -1)) {
-                System.out.println("Sieć neuronowa wygrała!");
-                break;
-            }
+//            if (checkWin(board, -1)) {
+//                System.out.println("Sieć neuronowa wygrała!");
+//                break;
+//            }
+            player = -player;
         }
-
         scanner.close();
+
     }
 
     private static int getBestMove(double[] data) {
@@ -253,39 +256,39 @@ public class TicTacToeNeuralNetwork {
         network.reset();
 
         // Zbieranie danych do trenowania sieci
-        trainingNetwork(network, -1);
+//        trainingNetwork(network, -1);
 
         // Zapisanie danych do pliku
-//        dataIO.saveDataToFileInJSON("data.json", dataModel);
+//        dataIO.saveDataToFileInJSON("dataWin.json", dataModel);
 //        input = dataIO.loadInputData("nInput.dat");
 //        output = dataIO.loadOutputData("nOutput.dat");
 //
-        // Przygotowanie danych treningowych
-        BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
-        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
-        int epoch = 1;
-        LocalDateTime start = LocalDateTime.now();
-        LocalDateTime end = start.plusMinutes(TIME_OF_TRAINING_IN_MINUTES);
-        try (ProgressBar pb = new ProgressBar("Trening", 100)) {
-            do {
-                train.iteration();
-                Thread.sleep(10);
-                if (epoch++ % 100 == 0) {
-                    Double a = train.getError() * 100;
-                    BigDecimal bd = new BigDecimal(Double.toString(train.getError()));
-                    bd = bd.setScale(4, RoundingMode.HALF_UP);
-                    pb.stepTo(a.longValue());
-                    pb.setExtraMessage("E: " + epoch / 1000 + "K, " + bd.doubleValue()+ " minęło: "+ (LocalDateTime.now().getMinute() - start.getMinute()) + " minut.");
-                }
-            } while (train.getError() > 0.01 && LocalDateTime.now().isBefore(end));
-            if (LocalDateTime.now().isAfter(end)){
-                System.out.println("Przekroczono czas treningu, który wynosił " + TIME_OF_TRAINING_IN_MINUTES + " minut.");
-            }
-            train.finishTraining();
-        }
+        // Uczenie sieci
+//        BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+//        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
+//        int epoch = 1;
+//        LocalDateTime start = LocalDateTime.now();
+//        LocalDateTime end = start.plusMinutes(TIME_OF_TRAINING_IN_MINUTES);
+//        try (ProgressBar pb = new ProgressBar("Trening", 100)) {
+//            do {
+//                train.iteration();
+//                Thread.sleep(10);
+//                if (epoch++ % 100 == 0) {
+//                    Double a = train.getError() * 100;
+//                    BigDecimal bd = new BigDecimal(Double.toString(train.getError()));
+//                    bd = bd.setScale(4, RoundingMode.HALF_UP);
+//                    pb.stepTo(a.longValue());
+//                    pb.setExtraMessage("E: " + epoch / 1000 + "K, " + bd.doubleValue()+ " minęło: "+ (LocalDateTime.now().getMinute() - start.getMinute()) + " minut.");
+//                }
+//            } while (train.getError() > 0.01 && LocalDateTime.now().isBefore(end));
+//            if (LocalDateTime.now().isAfter(end)){
+//                System.out.println("Przekroczono czas treningu, który wynosił " + TIME_OF_TRAINING_IN_MINUTES + " minut.");
+//            }
+//            train.finishTraining();
+//        }
 
         // Zapisanie sieci
-        EncogDirectoryPersistence.saveObject(new File("tictactoe.eg"), network);
+//        EncogDirectoryPersistence.saveObject(new File("tictactoe.eg"), network);
 
 
 //        // Testowanie sieci

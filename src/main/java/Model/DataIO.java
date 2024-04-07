@@ -1,6 +1,7 @@
+package Model;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -119,7 +120,7 @@ public class DataIO {
         try {
             // Sprawdzenie czy plik istnieje
             if (Files.exists(Paths.get(filename))) {
-                // Odczytanie danych z pliku i zdeserializowanie do listy obiektów DataModel
+                // Odczytanie danych z pliku i zdeserializowanie do listy obiektów Model.DataModel
                 String fileContent = new String(Files.readAllBytes(Paths.get(filename)));
                 DataModel[] existingDataArray = gson.fromJson(fileContent, DataModel[].class);
                 allData.addAll(List.of(existingDataArray));

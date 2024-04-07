@@ -1,4 +1,5 @@
-import com.fasterxml.jackson.annotation.JsonGetter;
+package Model;
+
 import lombok.Getter;
 
 @Getter

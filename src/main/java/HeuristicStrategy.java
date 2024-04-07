@@ -1,5 +1,7 @@
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
 public class HeuristicStrategy {
 
@@ -98,7 +100,9 @@ public class HeuristicStrategy {
     }
 
     private int getHeuristicValue(double[] board, int position, BoardElements element) {
+        // Wyjątki strategii heurystycznej
         if (position == 4) return 100; // Centrum ma najwyższą wartość
+        // Krzyżyk na środku
 
         int lineLocation = positionsLocation[position].boardLine;
         int columnLocation = positionsLocation[position].boardColumn;
@@ -128,6 +132,14 @@ public class HeuristicStrategy {
     private int getBestMove(double[] board, BoardElements element) {
         int bestMove = -1;
         int bestValue = -1;
+
+        // wyjątki strategii heurystycznej
+        if (Arrays.equals(board, new double[]{1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0}) ||
+                Arrays.equals(board, new double[]{0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0})) {
+            System.out.println("Nastąpił wyjątek strategii heurystycznej: Krzyżyki na rogach i kółko w środku. Wybieram pozycję 1");
+            return 1;
+        }
+
         for (int i = 0; i < board.length; i++) {
             if (board[i] == 0) {
                 int value = getHeuristicValue(board, i, element);

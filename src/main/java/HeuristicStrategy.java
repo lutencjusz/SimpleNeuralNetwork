@@ -85,7 +85,6 @@ public class HeuristicStrategy {
         }
     }
 
-
     public HeuristicStrategy() {
     }
 
@@ -102,7 +101,6 @@ public class HeuristicStrategy {
     private int getHeuristicValue(double[] board, int position, BoardElements element) {
         // Wyjątki strategii heurystycznej
         if (position == 4) return 100; // Centrum ma najwyższą wartość
-        // Krzyżyk na środku
 
         int lineLocation = positionsLocation[position].boardLine;
         int columnLocation = positionsLocation[position].boardColumn;

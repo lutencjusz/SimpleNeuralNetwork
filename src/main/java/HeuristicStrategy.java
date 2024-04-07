@@ -98,51 +98,32 @@ public class HeuristicStrategy {
     }
 
     private int getHeuristicValue(double[] board, int position, BoardElements element) {
-        if (position == 4) return 100;
+        if (position == 4) return 100; // Centrum ma najwyższą wartość
+
         int lineLocation = positionsLocation[position].boardLine;
         int columnLocation = positionsLocation[position].boardColumn;
         int diagonalLocation = positionsLocation[position].boardDiagonal;
 
-        int crossCount = 0;
-        int circleCount = 0;
-        int lineWeight = 0;
-        int columnWeight = 0;
-        int diagonalWeight = 0;
+        int lineWeight = calculateWeightForPosition(board, boardLines[lineLocation], element);
+        int columnWeight = calculateWeightForPosition(board, boardColumns[columnLocation], element);
+        int diagonalWeight = diagonalLocation != -1 ? calculateWeightForPosition(board, boardDiagonals[diagonalLocation], element) : 0;
 
-        for (int linePosition : boardLines[lineLocation]) {
-            if (board[linePosition] == 1) {
-                crossCount++;
-            } else if (board[linePosition] == -1) {
-                circleCount++;
-            }
-        }
-        lineWeight = getWeight(crossCount, circleCount, element);
-
-        crossCount = 0;
-        circleCount = 0;
-        for (int columnPosition : boardColumns[columnLocation]) {
-            if (board[columnPosition] == 1) {
-                crossCount++;
-            } else if (board[columnPosition] == -1) {
-                circleCount++;
-            }
-        }
-        columnWeight = getWeight(crossCount, circleCount, element);
-
-        crossCount = 0;
-        circleCount = 0;
-        if (diagonalLocation != -1) {
-            for (int diagonalPosition : boardDiagonals[diagonalLocation]) {
-                if (board[diagonalPosition] == 1) {
-                    crossCount++;
-                } else if (board[diagonalPosition] == -1) {
-                    circleCount++;
-                }
-            }
-            diagonalWeight = getWeight(crossCount, circleCount, element);
-        }
         return lineWeight + columnWeight + diagonalWeight;
     }
+
+    private int calculateWeightForPosition(double[] board, int[] positions, BoardElements element) {
+        int crossCount = 0;
+        int circleCount = 0;
+        for (int position : positions) {
+            if (board[position] == 1) {
+                crossCount++;
+            } else if (board[position] == -1) {
+                circleCount++;
+            }
+        }
+        return getWeight(crossCount, circleCount, element);
+    }
+
 
     private int getBestMove(double[] board, BoardElements element) {
         int bestMove = -1;

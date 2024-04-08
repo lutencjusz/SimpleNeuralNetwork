@@ -23,6 +23,8 @@ public class TicTacToeNeuralNetwork {
     static List<double[]> finalInputSet = new ArrayList<>();
     static List<double[]> finalOutputSet = new ArrayList<>();
     static final double VALUE = -1;
+    static final double TRAINING_WEIGHT = 1;
+    static HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
 
     // Metoda do wizualizacji planszy
     public static void displayBoard(double[] board) {
@@ -65,64 +67,52 @@ public class TicTacToeNeuralNetwork {
         for (int p0 = 0; p0 < 9; p0++) {
             if (p0 == 4) p1 = 0;
             for (int p2 = 0; p2 < 9; p2++) {
-                for (int p3 = 0; p3 < 9; p3++) {
-                    for (int p4 = 0; p4 < 9; p4++) {
-                        int player = -1;
-                        // kontrola czy nie ma powtórzeń
-                        Set<Integer> sumControl = new HashSet<>();
-                        sumControl.add(p0);
-                        sumControl.add(p1);
-                        sumControl.add(p2);
-                        sumControl.add(p3);
-                        sumControl.add(p4);
-                        if (sumControl.size() < 5) {
-                            continue;
-                        }
-                        List<double[]> inputSet = new ArrayList<>();
-                        List<double[]> outputSet = new ArrayList<>();
-                        double[] board = new double[9];
-                        // Ustawienie początkowego stanu planszy
-                        board[p0] = -robotPlayer;
-                        inputSet.add(board.clone());
-                        outputSet.add(convertNumberToArray(p1, VALUE));
-                        board[p1] = robotPlayer;
-                        board[p2] = -robotPlayer;
-                        inputSet.add(board.clone());
-                        outputSet.add(convertNumberToArray(p3, VALUE));
-                        board[p3] = robotPlayer;
-                        board[p4] = -robotPlayer;
-                        do {
-                            for (int j = 0; j < 9; j++) {
-                                if (isValidMove(board, j)) {
-                                    if (player == robotPlayer) {
-                                        inputSet.add(board.clone());
+                int player = -1;
+                // kontrola czy nie ma powtórzeń
+                Set<Integer> sumControl = new HashSet<>();
+                sumControl.add(p0);
+                sumControl.add(p1);
+                sumControl.add(p2);
+                if (sumControl.size() < 3) {
+                    continue;
+                }
+                List<double[]> inputSet = new ArrayList<>();
+                List<double[]> outputSet = new ArrayList<>();
+                double[] board = new double[9];
+                // Ustawienie początkowego stanu planszy
+                board[p0] = -robotPlayer;
+                inputSet.add(board.clone());
+                outputSet.add(convertNumberToArray(p1, TRAINING_WEIGHT));
+                board[p1] = robotPlayer;
+                board[p2] = -robotPlayer;
+                do {
+                    int j = heuristicStrategy.getBestMove(board, robotPlayer == player ? HeuristicStrategy.BoardElements.CIRCLE : HeuristicStrategy.BoardElements.CROSS, true);
+                    if (isValidMove(board, j)) {
+                        if (player == robotPlayer) {
+                            inputSet.add(board.clone());
 //                            System.out.println("Sytuacja na planszy:");
 //                            displayBoard(board);
-                                        outputSet.add(convertNumberToArray(j, VALUE));
-//                            System.out.println("Ruch robota:");
-//                            displayBoard(convertTable);
-                                    }
-                                    board[j] = player;
-                                    break;
-                                }
-                            }
-                            player = -player;
-                        } while (!checkWin(board, 1) && !checkWin(board, -1) && !isBoardFull(board));
-                        if (checkWin(board, robotPlayer)) {
-                            if (checkWin(board, robotPlayer)) {
-                                System.out.println("Wygrał robot! Dodaje dane do sieci, epoka#" + p0);
-                            } else {
-                                System.out.println("Remis! Dodaje dane do sieci, epoka#" + p0);
-                            }
-                            // Dodanie danych z gry do danych testowych
-                            finalInputSet.addAll(inputSet);
-                            finalOutputSet.addAll(outputSet);
-
+                            outputSet.add(convertNumberToArray(j, TRAINING_WEIGHT));
                         }
-                        if (checkWin(board, -robotPlayer)) {
-                            System.out.println("Wygrał gracz! Nie dodaje danych do sieci");
-                        }
+                        board[j] = player;
+//                        System.out.println("Ruch robota: " + (robotPlayer == player ? "robota" : "gracza"));
+//                        displayBoard(board);
                     }
+                    player = -player;
+                } while (!checkWin(board, 1) && !checkWin(board, -1) && !isBoardFull(board));
+                if (checkWin(board, robotPlayer) || isBoardFull(board)) {
+                    if (checkWin(board, robotPlayer)) {
+                        System.out.println("Wygrał robot! Dodaje dane do sieci, epoka#" + p0);
+                    } else {
+                        System.out.println("Remis! Dodaje dane do sieci, epoka#" + p0);
+                    }
+                    // Dodanie danych z gry do danych testowych
+                    finalInputSet.addAll(inputSet);
+                    finalOutputSet.addAll(outputSet);
+
+                }
+                if (checkWin(board, -robotPlayer)) {
+                    System.out.println("Wygrał gracz! Nie dodaje danych do sieci");
                 }
             }
         }
@@ -209,8 +199,12 @@ public class TicTacToeNeuralNetwork {
             displayBoard(board);
 
             // Sprawdzanie, czy gracz wygrał
-            if (checkWin(board, player) || isBoardFull(board)) {
-                System.out.println("Wygrałeś lub remis! Koniec gry.");
+            if (checkWin(board, player)) {
+                System.out.println("Wygrałeś! Koniec gry.");
+                break;
+            }
+            if (isBoardFull(board)) {
+                System.out.println("Remis! Koniec gry.");
                 break;
             }
 
@@ -218,6 +212,19 @@ public class TicTacToeNeuralNetwork {
             MLData inputMLData = new BasicMLData(board);
             MLData outputMLData = network.compute(inputMLData);
             int networkMove = getBestMove(outputMLData.getData());
+            int heuristicMove = heuristicStrategy.getBestMove(board, false);
+            if (heuristicMove != networkMove) {
+                System.out.println("Ruch sieci neuronowej (" + networkMove + ") różni się od ruchu heurystycznego (" + heuristicMove + "). Wybrano ruch sieci.");
+            }
+            if (!isValidMove(board, networkMove)) {
+                heuristicMove = heuristicStrategy.getBestMove(board, true);
+                System.out.println("Nieprawidłowy ruch sieci neuronowej (" + networkMove + "). Wybrano ruch heurystyczny: " + heuristicMove);
+                networkMove = heuristicMove;
+            }
+
+            // Algorytm heurystyczny oblicza ruch
+//            int networkMove = heuristicStrategy.getBestMove(board);
+
             finalInputSet.add(board.clone());
             board[networkMove] = -1; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
             finalOutputSet.add(convertNumberToArray(move, VALUE));
@@ -298,48 +305,50 @@ public class TicTacToeNeuralNetwork {
 //        dataIO.saveInputData("nInput.dat");
 
         // Tworzenie sieci neuronowej
-//        BasicNetwork network = new BasicNetwork();
-//        network.addLayer(new BasicLayer(null, true, 9)); // 9 wejść (3x3 plansza)
-//        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 18)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
-//        network.addLayer(new BasicLayer(new ActivationSigmoid(), false, 9)); // 9 wyjść (3x3 plansza)
-//        network.getStructure().finalizeStructure();
-//        network.reset();
+        BasicNetwork network = new BasicNetwork();
+        network.addLayer(new BasicLayer(null, true, 9)); // 9 wejść (3x3 plansza)
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 144)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), false, 9)); // 9 wyjść (3x3 plansza)
+        network.getStructure().finalizeStructure();
+        network.reset();
 
         // Zbieranie danych do trenowania sieci
-//        trainingNetwork(network, -1);
+        trainingNetwork(network, -1);
 
         // Zapisanie danych do pliku
 //        dataIO.saveDataToFileInJSON("dataWin.json", dataModel);
-        input = dataIO.loadInputData("nInput.dat");
-        output = dataIO.loadOutputData("nOutput.dat");
+        dataIO.saveDataToFileInJSON("dataTraining.json", dataModel);
+
+//        input = dataIO.loadInputData("nInput.dat");
+//        output = dataIO.loadOutputData("nOutput.dat");
 //
         // Uczenie sieci
-//        BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+        BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
 //        BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
-//        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
-//        int epoch = 1;
-//        LocalDateTime start = LocalDateTime.now();
-//        LocalDateTime end = start.plusMinutes(TIME_OF_TRAINING_IN_MINUTES);
-//        try (ProgressBar pb = new ProgressBar("Trening", 100)) {
-//            do {
-//                train.iteration();
-//                Thread.sleep(10);
-//                if (epoch++ % 100 == 0) {
-//                    Double a = train.getError() * 100;
-//                    BigDecimal bd = new BigDecimal(Double.toString(train.getError()));
-//                    bd = bd.setScale(4, RoundingMode.HALF_UP);
-//                    pb.stepTo(a.longValue());
-//                    pb.setExtraMessage("E: " + epoch / 1000 + "K, " + bd.doubleValue() + " minęło: " + (LocalDateTime.now().getMinute() - start.getMinute()) + " minut.");
-//                }
-//            } while (train.getError() > 0.01 && LocalDateTime.now().isBefore(end));
-//            if (LocalDateTime.now().isAfter(end)) {
-//                System.out.println("Przekroczono czas treningu, który wynosił " + TIME_OF_TRAINING_IN_MINUTES + " minut.");
-//            }
-//            train.finishTraining();
-//        }
-//
-//        // Zapisanie sieci
-//        EncogDirectoryPersistence.saveObject(new File("tictactoe.eg"), network);
+        final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
+        int epoch = 1;
+        LocalDateTime start = LocalDateTime.now();
+        LocalDateTime end = start.plusMinutes(TIME_OF_TRAINING_IN_MINUTES);
+        try (ProgressBar pb = new ProgressBar("Trening", 100)) {
+            do {
+                train.iteration();
+                Thread.sleep(10);
+                if (epoch++ % 100 == 0) {
+                    Double a = train.getError() * 100;
+                    BigDecimal bd = new BigDecimal(Double.toString(train.getError()));
+                    bd = bd.setScale(4, RoundingMode.HALF_UP);
+                    pb.stepTo(a.longValue());
+                    pb.setExtraMessage("E: " + epoch / 1000 + "K, " + bd.doubleValue() + " minęło: " + (LocalDateTime.now().getMinute() - start.getMinute()) + " minut.");
+                }
+            } while (train.getError() > 0.01 && LocalDateTime.now().isBefore(end));
+            if (LocalDateTime.now().isAfter(end)) {
+                System.out.println("Przekroczono czas treningu, który wynosił " + TIME_OF_TRAINING_IN_MINUTES + " minut.");
+            }
+            train.finishTraining();
+        }
+
+        // Zapisanie sieci
+        EncogDirectoryPersistence.saveObject(new File("tictactoe.eg"), network);
 
 
         // Testowanie sieci
@@ -348,50 +357,49 @@ public class TicTacToeNeuralNetwork {
 //        System.out.println("Wynik: " + outputMLData.getData(4)); // Przykładowe pole na planszy
 
         // Rozpoczęcie gry
-//        playGameWithAI(network);
-//        Encog.getInstance().shutdown();
+        playGameWithAI(network);
+        Encog.getInstance().shutdown();
 
-        // użycie algorytmu heurystycznego
-        HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
-        double[] board = new double[9];
-        int player = 1;
-        int move;
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.println("Podaj współrzędne ruchu (0-8): ");
-            do {
-                move = scanner.nextInt();
-                if (move < 0 || move > 8) {
-                    System.out.println("Nieprawidłowy ruch. Podaj współrzędne ruchu (0-8): ");
-                } else if (board[move] != 0) {
-                    System.out.println("To pole jest już zajęte. Podaj współrzędne ruchu (0-8): ");
-                }
-            } while (board[move] != 0);
-            board[move] = player;
-            // Wyświetlanie planszy
-            displayBoard(board);
-            if (checkWin(board, player)) {
-                System.out.println("Wygrałeś!");
-                break;
-            }
-            if (isBoardFull(board)) {
-                System.out.println("Remis!");
-                break;
-            }
-            player = -player;
-            int bestMove = heuristicStrategy.getBestMove(board);
-            board[bestMove] = player;
-            // Wyświetlanie planszy
-            displayBoard(board);
-            if (checkWin(board, player)) {
-                System.out.println("Wygrał komputer!");
-                break;
-            }
-            if (isBoardFull(board)) {
-                System.out.println("Remis!");
-                break;
-            }
-            player = -player;
-        }
+//        // użycie algorytmu heurystycznego
+//        double[] board = new double[9];
+//        int player = 1;
+//        int move;
+//        Scanner scanner = new Scanner(System.in);
+//        while (true) {
+//            System.out.println("Podaj współrzędne ruchu (0-8): ");
+//            do {
+//                move = scanner.nextInt();
+//                if (move < 0 || move > 8) {
+//                    System.out.println("Nieprawidłowy ruch. Podaj współrzędne ruchu (0-8): ");
+//                } else if (board[move] != 0) {
+//                    System.out.println("To pole jest już zajęte. Podaj współrzędne ruchu (0-8): ");
+//                }
+//            } while (board[move] != 0);
+//            board[move] = player;
+//            // Wyświetlanie planszy
+//            displayBoard(board);
+//            if (checkWin(board, player)) {
+//                System.out.println("Wygrałeś!");
+//                break;
+//            }
+//            if (isBoardFull(board)) {
+//                System.out.println("Remis!");
+//                break;
+//            }
+//            player = -player;
+//            int bestMove = heuristicStrategy.getBestMove(board);
+//            board[bestMove] = player;
+//            // Wyświetlanie planszy
+//            displayBoard(board);
+//            if (checkWin(board, player)) {
+//                System.out.println("Wygrał komputer!");
+//                break;
+//            }
+//            if (isBoardFull(board)) {
+//                System.out.println("Remis!");
+//                break;
+//            }
+//            player = -player;
+//        }
     }
 }

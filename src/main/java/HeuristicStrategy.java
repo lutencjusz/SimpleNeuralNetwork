@@ -67,7 +67,7 @@ public class HeuristicStrategy {
         }
     }
 
-    private enum BoardElements {
+    public enum BoardElements {
         CROSS,
         CIRCLE
     }
@@ -100,7 +100,7 @@ public class HeuristicStrategy {
 
     private int getHeuristicValue(double[] board, int position, BoardElements element) {
         // Wyjątki strategii heurystycznej
-        if (position == 4) return 100; // Centrum ma najwyższą wartość
+        if (position == 4) return 19; // Centrum ma najwyższą wartość
 
         int lineLocation = positionsLocation[position].boardLine;
         int columnLocation = positionsLocation[position].boardColumn;
@@ -127,14 +127,14 @@ public class HeuristicStrategy {
     }
 
 
-    private int getBestMove(double[] board, BoardElements element) {
+    public int getBestMove(double[] board, BoardElements element, boolean isLogging) {
         int bestMove = -1;
         int bestValue = -1;
 
         // wyjątki strategii heurystycznej
         if (Arrays.equals(board, new double[]{1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0}) ||
                 Arrays.equals(board, new double[]{0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0})) {
-            System.out.println("Nastąpił wyjątek strategii heurystycznej: Krzyżyki na rogach i kółko w środku. Wybieram pozycję 1");
+            if (isLogging) System.out.println("Nastąpił wyjątek strategii heurystycznej: Krzyżyki na rogach i kółko w środku. Wybieram pozycję 1");
             return 1;
         }
 
@@ -145,15 +145,15 @@ public class HeuristicStrategy {
                     bestValue = value;
                     bestMove = i;
                 }
-                System.out.println("Pozycja: " + i + " Wartość: " + value);
+                if (isLogging) System.out.println("Pozycja: " + i + " Wartość: " + value);
             }
         }
-        System.out.println("Najlepsza pozycja: " + bestMove + " Wartość: " + bestValue);
+        if (isLogging) System.out.println("Najlepsza pozycja: " + bestMove + " Wartość: " + bestValue);
         return bestMove;
     }
 
-    public int getBestMove(double[] board) {
-        return getBestMove(board, BoardElements.CIRCLE);
+    public int getBestMove(double[] board, boolean isLogging) {
+        return getBestMove(board, BoardElements.CIRCLE, isLogging);
     }
 }
 

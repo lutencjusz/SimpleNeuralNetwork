@@ -1,5 +1,7 @@
 package util;
 
+import org.fusesource.jansi.Ansi;
+
 import java.util.List;
 
 public class CheckStatusGame {
@@ -10,11 +12,11 @@ public class CheckStatusGame {
                 System.out.println();
             }
             if (board[i] == 1) {
-                System.out.print("X ");
+                System.out.print(Ansi.ansi().fgBright(Ansi.Color.GREEN).a("X ").reset());
             } else if (board[i] == -1) {
-                System.out.print("O ");
+                System.out.print(Ansi.ansi().fgBright(Ansi.Color.RED).a("O ").reset());
             } else {
-                System.out.print(". ");
+                System.out.print(Ansi.ansi().fg(Ansi.Color.WHITE).a(". ").reset());
             }
         }
         System.out.println();

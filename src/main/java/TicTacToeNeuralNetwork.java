@@ -1,3 +1,4 @@
+import model.BoardElement;
 import model.DataIO;
 import model.DataModel;
 import me.tongfei.progressbar.ProgressBar;
@@ -54,7 +55,7 @@ public class TicTacToeNeuralNetwork {
                 board[p1] = robotPlayer;
                 board[p2] = -robotPlayer;
                 do {
-                    int j = heuristicStrategy.getBestMove(board, robotPlayer == player ? HeuristicStrategy.BoardElements.CIRCLE : HeuristicStrategy.BoardElements.CROSS, true);
+                    int j = heuristicStrategy.getBestMove(board, robotPlayer == player ? BoardElement.CIRCLE : BoardElement.CROSS, true);
                     if (CheckStatusGame.isValidMove(board, j)) {
                         if (player == robotPlayer) {
                             inputSet.add(board.clone());

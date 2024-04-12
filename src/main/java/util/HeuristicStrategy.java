@@ -1,6 +1,7 @@
 package util;
 
 import lombok.Getter;
+import model.BoardElement;
 
 import java.util.Arrays;
 
@@ -69,11 +70,6 @@ public class HeuristicStrategy {
         }
     }
 
-    public enum BoardElements {
-        CROSS,
-        CIRCLE
-    }
-
     @Getter
     class Weight {
         private final int crossCount;
@@ -90,8 +86,8 @@ public class HeuristicStrategy {
     public HeuristicStrategy() {
     }
 
-    private int getWeight(int crossCount, int circleCount, BoardElements element) {
-        Weight[] weights = element == BoardElements.CROSS ? weightsForCross : weightsForCircle;
+    private int getWeight(int crossCount, int circleCount, BoardElement element) {
+        Weight[] weights = element == BoardElement.CROSS ? weightsForCross : weightsForCircle;
         for (Weight weight : weights) {
             if (weight.getCrossCount() == crossCount && weight.getCircleCount() == circleCount) {
                 return weight.getWeight();
@@ -100,7 +96,7 @@ public class HeuristicStrategy {
         return 0;
     }
 
-    private int getHeuristicValue(double[] board, int position, BoardElements element) {
+    private int getHeuristicValue(double[] board, int position, BoardElement element) {
         // Wyjątki strategii heurystycznej
         if (position == 4) return 19; // Centrum ma najwyższą wartość
 
@@ -115,7 +111,7 @@ public class HeuristicStrategy {
         return lineWeight + columnWeight + diagonalWeight;
     }
 
-    private int calculateWeightForPosition(double[] board, int[] positions, BoardElements element) {
+    private int calculateWeightForPosition(double[] board, int[] positions, BoardElement element) {
         int crossCount = 0;
         int circleCount = 0;
         for (int position : positions) {
@@ -129,7 +125,7 @@ public class HeuristicStrategy {
     }
 
 
-    public int getBestMove(double[] board, BoardElements element, boolean isLogging) {
+    public int getBestMove(double[] board, BoardElement element, boolean isLogging) {
         int bestMove = -1;
         int bestValue = -1;
 
@@ -155,7 +151,7 @@ public class HeuristicStrategy {
     }
 
     public int getBestMove(double[] board, boolean isLogging) {
-        return getBestMove(board, BoardElements.CIRCLE, isLogging);
+        return getBestMove(board, BoardElement.CIRCLE, isLogging);
     }
 }
 

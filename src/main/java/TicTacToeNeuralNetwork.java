@@ -1,5 +1,5 @@
-import Model.DataIO;
-import Model.DataModel;
+import model.DataIO;
+import model.DataModel;
 import me.tongfei.progressbar.ProgressBar;
 import org.encog.Encog;
 import org.encog.engine.network.activation.ActivationSigmoid;
@@ -10,6 +10,8 @@ import org.encog.neural.networks.BasicNetwork;
 import org.encog.neural.networks.layers.BasicLayer;
 import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
 import org.encog.persist.EncogDirectoryPersistence;
+import util.CheckStatusGame;
+import util.HeuristicStrategy;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,40 +28,6 @@ public class TicTacToeNeuralNetwork {
     static final double TRAINING_WEIGHT = 1;
     static HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
 
-    // Metoda do wizualizacji planszy
-    public static void displayBoard(double[] board) {
-        for (int i = 0; i < 9; i++) {
-            if (i % 3 == 0) {
-                System.out.println();
-            }
-            if (board[i] == 1) {
-                System.out.print("X ");
-            } else if (board[i] == -1) {
-                System.out.print("O ");
-            } else {
-                System.out.print(". ");
-            }
-        }
-        System.out.println();
-    }
-
-    public static boolean isValidMove(double[] board, int move) {
-        return board[move] == 0;
-    }
-
-    private static double[][] convertListToArray(List<double[]> list) {
-        double[][] array = new double[list.size()][];
-        for (int i = 0; i < list.size(); i++) {
-            array[i] = list.get(i);
-        }
-        return array;
-    }
-
-    private static double[] convertNumberToArray(int number, double value) {
-        double[] array = new double[9];
-        array[number] = value;
-        return array;
-    }
 
     // Metoda do trenowania sieci neuronowej
     public static void trainingNetwork(BasicNetwork network, int robotPlayer) {
@@ -82,26 +50,26 @@ public class TicTacToeNeuralNetwork {
                 // Ustawienie początkowego stanu planszy
                 board[p0] = -robotPlayer;
                 inputSet.add(board.clone());
-                outputSet.add(convertNumberToArray(p1, TRAINING_WEIGHT));
+                outputSet.add(CheckStatusGame.convertNumberToArray(p1, TRAINING_WEIGHT));
                 board[p1] = robotPlayer;
                 board[p2] = -robotPlayer;
                 do {
                     int j = heuristicStrategy.getBestMove(board, robotPlayer == player ? HeuristicStrategy.BoardElements.CIRCLE : HeuristicStrategy.BoardElements.CROSS, true);
-                    if (isValidMove(board, j)) {
+                    if (CheckStatusGame.isValidMove(board, j)) {
                         if (player == robotPlayer) {
                             inputSet.add(board.clone());
 //                            System.out.println("Sytuacja na planszy:");
 //                            displayBoard(board);
-                            outputSet.add(convertNumberToArray(j, TRAINING_WEIGHT));
+                            outputSet.add(CheckStatusGame.convertNumberToArray(j, TRAINING_WEIGHT));
                         }
                         board[j] = player;
 //                        System.out.println("Ruch robota: " + (robotPlayer == player ? "robota" : "gracza"));
 //                        displayBoard(board);
                     }
                     player = -player;
-                } while (!checkWin(board, 1) && !checkWin(board, -1) && !isBoardFull(board));
-                if (checkWin(board, robotPlayer) || isBoardFull(board)) {
-                    if (checkWin(board, robotPlayer)) {
+                } while (!CheckStatusGame.checkWin(board, 1) && !CheckStatusGame.checkWin(board, -1) && !CheckStatusGame.isBoardFull(board));
+                if (CheckStatusGame.checkWin(board, robotPlayer) || CheckStatusGame.isBoardFull(board)) {
+                    if (CheckStatusGame.checkWin(board, robotPlayer)) {
                         System.out.println("Wygrał robot! Dodaje dane do sieci, epoka#" + p0);
                     } else {
                         System.out.println("Remis! Dodaje dane do sieci, epoka#" + p0);
@@ -111,13 +79,13 @@ public class TicTacToeNeuralNetwork {
                     finalOutputSet.addAll(outputSet);
 
                 }
-                if (checkWin(board, -robotPlayer)) {
+                if (CheckStatusGame.checkWin(board, -robotPlayer)) {
                     System.out.println("Wygrał gracz! Nie dodaje danych do sieci");
                 }
             }
         }
         System.out.println("Przygotowanie danych zakończone!");
-        convertArraysToDataModel(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+        convertArraysToDataModel(CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
         System.out.println("Konwersja do JSON zakończona!");
 
     }
@@ -134,7 +102,7 @@ public class TicTacToeNeuralNetwork {
         int player = 1;
         Scanner scanner = new Scanner(System.in);
         double[] board = new double[9]; // Początkowy stan planszy
-        displayBoard(board);
+        CheckStatusGame.displayBoard(board);
         while (true) {
             int move;
             // Gracz wprowadza ruch
@@ -143,32 +111,32 @@ public class TicTacToeNeuralNetwork {
                 move = scanner.nextInt();
                 if (move < 0 || move > 8) {
                     System.out.println("Nieprawidłowy ruch. Podaj współrzędne ruchu (0-8): ");
-                } else if (!isValidMove(board, move)) {
+                } else if (!CheckStatusGame.isValidMove(board, move)) {
                     System.out.println("To pole jest już zajęte. Podaj współrzędne ruchu (0-8): ");
                 }
-            } while (!isValidMove(board, move)); // Sprawdzanie, czy ruch jest poprawny (pole jest puste
+            } while (!CheckStatusGame.isValidMove(board, move)); // Sprawdzanie, czy ruch jest poprawny (pole jest puste
             if (player == -1) {
                 finalInputSet.add(board.clone());
-                finalOutputSet.add(convertNumberToArray(move, VALUE));
+                finalOutputSet.add(CheckStatusGame.convertNumberToArray(move, VALUE));
             }
 
             board[move] = player; // Zakładamy, że gracz jest reprezentowany przez 1
 
             // Wyświetlanie planszy
-            displayBoard(board);
+            CheckStatusGame.displayBoard(board);
 
             // Sprawdzanie, czy gracz wygrał
-            if (checkWin(board, player) || isBoardFull(board)) {
+            if (CheckStatusGame.checkWin(board, player) || CheckStatusGame.isBoardFull(board)) {
                 System.out.println("Wygrałeś lub remis! Koniec gry.");
                 System.out.println("Czy zapisać dane z gry do sieci? (t/n)");
                 String saveData = scanner.next();
                 if (saveData.equals("t")) {
-                    convertArraysToDataModel(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+                    convertArraysToDataModel(CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
                     DataIO.addDataToFileInJSON("dataWin.json", dataModel);
                 }
                 break;
             }
-            displayBoard(board);
+            CheckStatusGame.displayBoard(board);
             player = -player;
         }
         scanner.close();
@@ -179,7 +147,7 @@ public class TicTacToeNeuralNetwork {
         int player = 1;
         Scanner scanner = new Scanner(System.in);
         double[] board = new double[9]; // Początkowy stan planszy
-        displayBoard(board);
+        CheckStatusGame.displayBoard(board);
         while (true) {
             int move;
             // Gracz wprowadza ruch
@@ -188,22 +156,22 @@ public class TicTacToeNeuralNetwork {
                 move = scanner.nextInt();
                 if (move < 0 || move > 8) {
                     System.out.println("Nieprawidłowy ruch. Podaj współrzędne ruchu (0-8): ");
-                } else if (!isValidMove(board, move)) {
+                } else if (!CheckStatusGame.isValidMove(board, move)) {
                     System.out.println("To pole jest już zajęte. Podaj współrzędne ruchu (0-8): ");
                 }
-            } while (!isValidMove(board, move)); // Sprawdzanie, czy ruch jest poprawny (pole jest puste
+            } while (!CheckStatusGame.isValidMove(board, move)); // Sprawdzanie, czy ruch jest poprawny (pole jest puste
 
             board[move] = player; // Zakładamy, że gracz jest reprezentowany przez 1
 
             // Wyświetlanie planszy
-            displayBoard(board);
+            CheckStatusGame.displayBoard(board);
 
             // Sprawdzanie, czy gracz wygrał
-            if (checkWin(board, player)) {
+            if (CheckStatusGame.checkWin(board, player)) {
                 System.out.println("Wygrałeś! Koniec gry.");
                 break;
             }
-            if (isBoardFull(board)) {
+            if (CheckStatusGame.isBoardFull(board)) {
                 System.out.println("Remis! Koniec gry.");
                 break;
             }
@@ -216,7 +184,7 @@ public class TicTacToeNeuralNetwork {
             if (heuristicMove != networkMove) {
                 System.out.println("Ruch sieci neuronowej (" + networkMove + ") różni się od ruchu heurystycznego (" + heuristicMove + "). Wybrano ruch sieci.");
             }
-            if (!isValidMove(board, networkMove)) {
+            if (!CheckStatusGame.isValidMove(board, networkMove)) {
                 heuristicMove = heuristicStrategy.getBestMove(board, true);
                 System.out.println("Nieprawidłowy ruch sieci neuronowej (" + networkMove + "). Wybrano ruch heurystyczny: " + heuristicMove);
                 networkMove = heuristicMove;
@@ -227,18 +195,18 @@ public class TicTacToeNeuralNetwork {
 
             finalInputSet.add(board.clone());
             board[networkMove] = -1; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
-            finalOutputSet.add(convertNumberToArray(move, VALUE));
+            finalOutputSet.add(CheckStatusGame.convertNumberToArray(move, VALUE));
 
             // Wyświetlanie planszy
-            displayBoard(board);
+            CheckStatusGame.displayBoard(board);
 
             // Sprawdzanie, czy sieć neuronowa wygrała
-            if (checkWin(board, -1)) {
+            if (CheckStatusGame.checkWin(board, -1)) {
                 System.out.println("Sieć neuronowa wygrała!");
                 System.out.println("Czy zapisać dane z gry do sieci? (t/n)");
                 String saveData = scanner.next();
                 if (saveData.equals("t")) {
-                    convertArraysToDataModel(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+                    convertArraysToDataModel(CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
                     DataIO.addDataToFileInJSON("dataWin.json", dataModel);
                 }
                 break;
@@ -258,37 +226,6 @@ public class TicTacToeNeuralNetwork {
             }
         }
         return bestMove;
-    }
-
-    private static boolean isBoardFull(double[] board) {
-        for (double v : board) {
-            if (v == 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean checkWin(double[] board, int i) {
-        // Sprawdzanie wierszy
-        for (int j = 0; j < 3; j++) {
-            if (board[j] == i && board[j + 3] == i && board[j + 6] == i) {
-                return true;
-            }
-        }
-
-        // Sprawdzanie kolumn
-        for (int j = 0; j < 9; j += 3) {
-            if (board[j] == i && board[j + 1] == i && board[j + 2] == i) {
-                return true;
-            }
-        }
-
-        // Sprawdzanie przekątnych
-        if (board[0] == i && board[4] == i && board[8] == i) {
-            return true;
-        }
-        return board[2] == i && board[4] == i && board[6] == i;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -323,7 +260,7 @@ public class TicTacToeNeuralNetwork {
 //        output = dataIO.loadOutputData("nOutput.dat");
 //
         // Uczenie sieci
-        BasicMLDataSet trainingSet = new BasicMLDataSet(convertListToArray(finalInputSet), convertListToArray(finalOutputSet));
+        BasicMLDataSet trainingSet = new BasicMLDataSet(CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
 //        BasicMLDataSet trainingSet = new BasicMLDataSet(input, output);
         final ResilientPropagation train = new ResilientPropagation(network, trainingSet);
         int epoch = 1;

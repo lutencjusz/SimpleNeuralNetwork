@@ -1,4 +1,4 @@
-# Tic-Tac-Toe Game
+# Tic-Tac-Toe Games
 
 This project contains three main classes responsible for the game of Tic-Tac-Toe with a limitation to 3 fields and without, in different variants.
 ## GUI Class

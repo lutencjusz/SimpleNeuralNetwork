@@ -21,6 +21,9 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * Klasa reprezentująca grę w kółko i krzyżyk z wykorzystaniem sieci neuronowej oraz algorytmu heurystycznego.
+ */
 public class TicTacToeNeuralNetwork {
 
     static final int TIME_OF_TRAINING_IN_MINUTES = 10;

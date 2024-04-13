@@ -1,11 +1,35 @@
+import model.BoardElement;
+import model.DataModel;
+import util.CheckStatusGame;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
 
+/**
+ * Klasa reprezentująca graficzny interfejs użytkownika gry w kółko i krzyżyk z ograniczeniem do 3 pól.
+ */
 public class TicTacToeGraf extends JFrame implements ActionListener {
-    private JButton[][] buttons = new JButton[3][3];
-    private boolean currentPlayer = true;  // true for X, false for O
+    private BoardElement player = BoardElement.CROSS;
+    private final Color CROSS_COLOR = Color.GREEN.darker();
+    private final Color LIGHT_CROSS_COLOR = Color.GREEN.brighter();
+    private final Color CIRCLE_COLOR = Color.pink;
+    private final Color LIGHT_CIRCLE_COLOR = Color.red;
+    private final Color DISAPPER_COLOR = Color.gray;
+    private double[] board = new double[9];
+    private java.util.List<DataModel> dataModel = new ArrayList<>();
+    private java.util.List<double[]> finalInputSet = new ArrayList<>();
+    private List<double[]> finalOutputSet = new ArrayList<>();
+    private Queue<Integer> circleBoard = new LinkedList<>();
+    private Queue<Integer> crossBoard = new LinkedList<>();
+    private int middleCircleBoard = -1;
+    private int middleCrossBoard = -1;
+    private int lastCircleMove = -1;
+    private int lastCrossMove = -1;
+    private JButton[][] buttons = new JButton[3][3];// true for X, false for O
 
     public TicTacToeGraf() {
         super("Kółko i Krzyżyk");
@@ -28,52 +52,118 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
         }
     }
 
+    private void displayBoard(BoardElement disappearColorInNextMove) {
+        int disappearMove = -1;
+        if (disappearColorInNextMove == BoardElement.CIRCLE && circleBoard.size() == 3) {
+            disappearMove = circleBoard.peek();
+        } else if (disappearColorInNextMove == BoardElement.CROSS && crossBoard.size() == 3) {
+            disappearMove = crossBoard.peek();
+        }
+        int counter = 0;
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                if (board[counter] == BoardElement.CIRCLE.getValue()) {
+                    buttons[row][col].setText("O");
+                    if (disappearMove == counter) {
+                        buttons[row][col].setForeground(DISAPPER_COLOR);
+                    } else if (circleBoard.size() > 1 && middleCircleBoard == counter) {
+                        buttons[row][col].setForeground(CIRCLE_COLOR);
+                    } else {
+                        buttons[row][col].setForeground(LIGHT_CIRCLE_COLOR);
+                    }
+                } else if (board[counter] == BoardElement.CROSS.getValue()) {
+                    buttons[row][col].setText("X");
+                    if (disappearMove == counter) {
+                        buttons[row][col].setForeground(DISAPPER_COLOR);
+                    } else if (crossBoard.size() > 1 && middleCrossBoard == counter) {
+                        buttons[row][col].setForeground(CROSS_COLOR);
+                    } else {
+                        buttons[row][col].setForeground(LIGHT_CROSS_COLOR);
+                    }
+                } else {
+                    buttons[row][col].setText("");
+                }
+                counter++;
+            }
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-        JButton buttonClicked = (JButton) e.getSource(); // gets the particular button that was clicked
-        if (currentPlayer) {
+        int move = -1;
+        JButton buttonClicked = (JButton) e.getSource();
+        if (!buttonClicked.getText().isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < buttons.length; i++) {
+            for (int j = 0; j < buttons[i].length; j++) {
+                if (buttons[i][j] == buttonClicked) {
+                    move = i * 3 + j;
+                    // Możesz tutaj wykonać dodatkowe działania po identyfikacji przycisku
+                }
+            }
+        }// gets the particular button that was clicked
+        if (player == BoardElement.CROSS) {
             if (buttonClicked.getText().equals("")) {
-                buttonClicked.setForeground(Color.RED);
+                buttonClicked.setForeground(CROSS_COLOR);
                 buttonClicked.setText("X");
-                currentPlayer = false;
-                checkForWin();
-            }
-        } else {
-            if (buttonClicked.getText().equals("")) {
-                buttonClicked.setForeground(Color.BLUE);
-                buttonClicked.setText("O");
-                currentPlayer = true;
-                checkForWin();
             }
         }
-    }
-
-    private void checkForWin() {
-        // Horizontal, vertical, and diagonal win checks
-        for (int i = 0; i < 3; i++) {
-            if (checkRowCol(buttons[i][0].getText(), buttons[i][1].getText(), buttons[i][2].getText()) ||
-                    checkRowCol(buttons[0][i].getText(), buttons[1][i].getText(), buttons[2][i].getText()) ||
-                    checkRowCol(buttons[0][0].getText(), buttons[1][1].getText(), buttons[2][2].getText()) ||
-                    checkRowCol(buttons[0][2].getText(), buttons[1][1].getText(), buttons[2][0].getText())) {
-
-                JOptionPane.showMessageDialog(null, "Gracz " + (currentPlayer ? "O" : "X") + " wygrał!");
-                resetButtons();
-                break;
-            }
+        removeMoveFromTableBoard(player.getOpposite());
+        addMove(move, player);
+        displayBoard(player);
+        if (CheckStatusGame.checkWin(board, player.getValue())) {
+            System.out.println("Wygrałeś!");
+            JOptionPane.showMessageDialog(null, "Gracz " + player + " wygrał!");
+            resetButtons();
         }
-    }
-
-    private boolean checkRowCol(String c1, String c2, String c3) {
-        return (!c1.equals("") && c1.equals(c2) && c2.equals(c3));
+        player = player.getOpposite();
     }
 
     private void resetButtons() {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
-                buttons[row][col].setText("K");
+                buttons[row][col].setText("");
             }
         }
-        currentPlayer = true;
+        middleCircleBoard = -1;
+        middleCrossBoard = -1;
+        lastCircleMove = -1;
+        lastCrossMove = -1;
+        circleBoard.clear();
+        crossBoard.clear();
+        Arrays.fill(board, 0);
+    }
+
+    public void removeMoveFromTableBoard(BoardElement boardElements) {
+        if (boardElements == BoardElement.CIRCLE && circleBoard.size() == 3) {
+            board[circleBoard.peek()] = 0;
+            circleBoard.remove();
+        } else if (boardElements == BoardElement.CROSS && crossBoard.size() == 3) {
+            board[crossBoard.peek()] = 0;
+            crossBoard.remove();
+        } else if (boardElements == BoardElement.NULL) {
+            throw new IllegalArgumentException("Nieprawidłowy element planszy!");
+        }
+    }
+
+    public void addMove(int move, BoardElement boardElements) {
+        board[move] = boardElements.getValue();
+        if (boardElements == BoardElement.CIRCLE) {
+            if (circleBoard.size() > 0) {
+                middleCircleBoard = lastCircleMove;
+            }
+            lastCircleMove = move;
+            circleBoard.add(move);
+        } else if (boardElements == BoardElement.CROSS) {
+            if (crossBoard.size() > 0) {
+                middleCrossBoard = lastCrossMove;
+            }
+            lastCrossMove = move;
+            crossBoard.add(move);
+        } else {
+            throw new IllegalArgumentException("Nieprawidłowy element planszy!");
+        }
     }
 
     public static void main(String[] args) {

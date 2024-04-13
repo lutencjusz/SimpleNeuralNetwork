@@ -5,6 +5,10 @@ import util.CheckStatusGame;
 
 import java.util.*;
 
+/**
+ * Klasy reprezentująca grę w kółko i krzyżyk z ograniczeniem do 3 pól.
+ */
+
 public class TicTacToeMax3 {
 
     static final Ansi.Color CROSS_COLOR = Ansi.Color.GREEN;

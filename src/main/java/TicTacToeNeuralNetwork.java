@@ -62,7 +62,7 @@ public class TicTacToeNeuralNetwork {
                 board[p1] = robotPlayer;
                 board[p2] = -robotPlayer;
                 do {
-                    int j = heuristicStrategy.getBestMove(board, BoardElement.getBoardElement(robotPlayer), true);
+                    int j = heuristicStrategy.getBestMove(board, BoardElement.getBoardElement(robotPlayer), false, false);
                     if (CheckStatusGame.isValidMove(board, j)) {
                         if (player == robotPlayer) {
                             inputSet.add(board.clone());
@@ -188,12 +188,12 @@ public class TicTacToeNeuralNetwork {
             MLData inputMLData = new BasicMLData(board);
             MLData outputMLData = network.compute(inputMLData);
             int networkMove = getBestMove(outputMLData.getData());
-            int heuristicMove = heuristicStrategy.getBestMove(board, false);
+            int heuristicMove = heuristicStrategy.getBestMove(board, false, false);
             if (heuristicMove != networkMove) {
                 System.out.println("Ruch sieci neuronowej (" + networkMove + ") różni się od ruchu heurystycznego (" + heuristicMove + "). Wybrano ruch sieci.");
             }
             if (!CheckStatusGame.isValidMove(board, networkMove)) {
-                heuristicMove = heuristicStrategy.getBestMove(board, true);
+                heuristicMove = heuristicStrategy.getBestMove(board, true, false);
                 System.out.println("Nieprawidłowy ruch sieci neuronowej (" + networkMove + "). Wybrano ruch heurystyczny: " + heuristicMove);
                 networkMove = heuristicMove;
             }

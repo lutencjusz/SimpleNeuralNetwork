@@ -1,18 +1,25 @@
 import model.BoardElement;
 import model.DataModel;
 import util.CheckStatusGame;
+import util.HeuristicStrategy;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
 import java.util.List;
+import java.util.Queue;
+import java.util.*;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Klasa reprezentująca graficzny interfejs użytkownika gry w kółko i krzyżyk z ograniczeniem do 3 pól.
  */
 public class TicTacToeGraf extends JFrame implements ActionListener {
+    HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
+    final boolean IS_PLAY_WITH_COMPUTER = true;
+    final int SLEEP_INTERVAL_IN_MILI = 1000;
     private BoardElement player = BoardElement.CROSS;
     private final Color CROSS_COLOR = Color.GREEN.darker();
     private final Color LIGHT_CROSS_COLOR = Color.GREEN.brighter();
@@ -113,11 +120,29 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
         addMove(move, player);
         displayBoard(player);
         if (CheckStatusGame.checkWin(board, player.getValue())) {
-            System.out.println("Wygrałeś!");
             JOptionPane.showMessageDialog(null, "Gracz " + player + " wygrał!");
             resetButtons();
+            return;
         }
         player = player.getOpposite();
+        if (IS_PLAY_WITH_COMPUTER && player == BoardElement.CIRCLE) {
+            super.update(this.getGraphics());
+            try {
+                sleep(SLEEP_INTERVAL_IN_MILI);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+            int computerMove = heuristicStrategy.getBestMove(board, false, true);
+            removeMoveFromTableBoard(player.getOpposite());
+            addMove(computerMove, player);
+            displayBoard(player);
+            if (CheckStatusGame.checkWin(board, player.getValue())) {
+                System.out.println("Komputer wygrał!");
+                JOptionPane.showMessageDialog(null, "Gracz " + player + " wygrał!");
+                resetButtons();
+            }
+            player = player.getOpposite();
+        }
     }
 
     private void resetButtons() {

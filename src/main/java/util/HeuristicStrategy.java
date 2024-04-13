@@ -96,9 +96,14 @@ public class HeuristicStrategy {
         return 0;
     }
 
-    private int getHeuristicValue(double[] board, int position, BoardElement element) {
+    private int getHeuristicValue(double[] board, int position, BoardElement element, boolean isComputerPlaying) {
         // Wyjątki strategii heurystycznej
-        if (position == 4) return 19; // Centrum ma najwyższą wartość
+        if (isComputerPlaying) {
+            if (position == 4) return 7;
+        } else {
+            if (position == 4) return 19; // Centrum ma najwyższą wartość
+        }
+
 
         int lineLocation = positionsLocation[position].boardLine;
         int columnLocation = positionsLocation[position].boardColumn;
@@ -125,20 +130,23 @@ public class HeuristicStrategy {
     }
 
 
-    public int getBestMove(double[] board, BoardElement element, boolean isLogging) {
+    public int getBestMove(double[] board, BoardElement element, boolean isLogging, boolean isComputerPlaying) {
         int bestMove = -1;
         int bestValue = -1;
 
-        // wyjątki strategii heurystycznej
-        if (Arrays.equals(board, new double[]{1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0}) ||
-                Arrays.equals(board, new double[]{0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0})) {
-            if (isLogging) System.out.println("Nastąpił wyjątek strategii heurystycznej: Krzyżyki na rogach i kółko w środku. Wybieram pozycję 1");
-            return 1;
+        if (!isComputerPlaying) {
+            //        // wyjątki strategii heurystycznej
+            if (Arrays.equals(board, new double[]{1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0}) ||
+                    Arrays.equals(board, new double[]{0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0})) {
+                if (isLogging)
+                    System.out.println("Nastąpił wyjątek strategii heurystycznej: Krzyżyki na rogach i kółko w środku. Wybieram pozycję 1");
+                return 1;
+            }
         }
 
         for (int i = 0; i < board.length; i++) {
             if (board[i] == 0) {
-                int value = getHeuristicValue(board, i, element);
+                int value = getHeuristicValue(board, i, element, isComputerPlaying);
                 if (value > bestValue) {
                     bestValue = value;
                     bestMove = i;
@@ -150,8 +158,8 @@ public class HeuristicStrategy {
         return bestMove;
     }
 
-    public int getBestMove(double[] board, boolean isLogging) {
-        return getBestMove(board, BoardElement.CIRCLE, isLogging);
+    public int getBestMove(double[] board, boolean isLogging, boolean isComputerPlaying) {
+        return getBestMove(board, BoardElement.CIRCLE, isLogging, isComputerPlaying);
     }
 }
 

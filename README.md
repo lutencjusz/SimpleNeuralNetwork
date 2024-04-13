@@ -3,8 +3,8 @@
 This project contains three main classes responsible for the game of Tic-Tac-Toe with a limitation to 3 fields and without, in different variants.
 ## GUI Class
 
-The `TicTacToeGraf` class is responsible for the graphical representation of the Tic-Tac-Toe game with a limitation to max. 3 Xs and Os on the board. It allows the user to interact with the game through a graphical interface that includes a 3x3 grid of buttons.
-It enables gameplay in player versus player mode as well as player mode.
+The `TicTacToeGraf` class is responsible for the graphical representation of the Tic-Tac-Toe game with a limitation to max. 3 Xs and Os on the board. It allows the user to interact with the game through a graphical interface based on `javax.swing` that includes a 3x3 grid of buttons.
+It enables gameplay in player versus player mode as well as player versus computer.
 
 ### Functionalities
 

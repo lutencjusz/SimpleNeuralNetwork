@@ -38,4 +38,5 @@ git clone <repository-url>
 cd project-directory
 
 # Launching the application
-java -jar TicTacToe.jar
+run the main method in one of the `TicTacToeGraf`, `TicTacToeMax3` or `TicTacToeNeuralNetwork` class
+```

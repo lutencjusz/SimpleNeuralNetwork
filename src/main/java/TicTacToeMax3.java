@@ -1,5 +1,4 @@
 import model.BoardElement;
-import model.DataIO;
 import model.DataModel;
 import org.fusesource.jansi.Ansi;
 import util.CheckStatusGame;
@@ -15,12 +14,12 @@ public class TicTacToeMax3 {
     static Queue<Integer> circleBoard = new LinkedList<>();
     static Queue<Integer> crossBoard = new LinkedList<>();
 
-    public static boolean displayBoard(BoardElement disappearColorInNextMove) {
+    public static void displayBoard(BoardElement disappearColorInNextMove) {
         int disappearMove = -1;
         if (disappearColorInNextMove == BoardElement.CIRCLE && circleBoard.size() == 3) {
-            disappearMove = circleBoard.remove();
+            disappearMove = circleBoard.peek();
         } else if (disappearColorInNextMove == BoardElement.CROSS && crossBoard.size() == 3) {
-            disappearMove = crossBoard.remove();
+            disappearMove = crossBoard.peek();
         }
         for (int i = 0; i < 9; i++) {
             if (i % 3 == 0) {
@@ -43,32 +42,33 @@ public class TicTacToeMax3 {
             }
         }
         System.out.println();
-        if (CheckStatusGame.checkWin(board, disappearColorInNextMove == BoardElement.CIRCLE ? -1 : 1)) {
-            System.out.println("Wygrałeś!");
-            return true;
-        } else if (CheckStatusGame.isBoardFull(board)) {
-            System.out.println("Remis!");
-            return true;
+    }
+
+    public static void removeMoveFromTableBoard(int move, BoardElement boardElements) {
+        if (boardElements == BoardElement.CIRCLE && circleBoard.size() == 3) {
+            board[move] = 0;
+            circleBoard.remove();
+        } else if (boardElements == BoardElement.CROSS && crossBoard.size() == 3) {
+            board[move] = 0;
+            crossBoard.remove();
+        } else if (boardElements == BoardElement.NULL) {
+            throw new IllegalArgumentException("Nieprawidłowy element planszy!");
         }
-        if (disappearMove != -1) {
-            board[disappearMove] = 0;
-            System.out.println();
-        }
-        return false;
     }
 
     public static void addMove(int move, BoardElement boardElements) {
+        board[move] = boardElements.getValue();
         if (boardElements == BoardElement.CIRCLE) {
-            board[move] = -1;
             circleBoard.add(move);
-        } else {
-            board[move] = 1;
+        } else if (boardElements == BoardElement.CROSS) {
             crossBoard.add(move);
+        } else {
+            throw new IllegalArgumentException("Nieprawidłowy element planszy!");
         }
     }
 
     public static void playWithPayer() {
-        int player = 1;
+        int player = BoardElement.CROSS.getValue();
         Scanner scanner = new Scanner(System.in);
         displayBoard(BoardElement.CROSS);
         while (true) {
@@ -83,11 +83,17 @@ public class TicTacToeMax3 {
                     System.out.println("To pole jest już zajęte. Podaj współrzędne ruchu (0-8): ");
                 }
             } while (!CheckStatusGame.isValidMove(board, move)); // Sprawdzanie, czy ruch jest poprawny (pole jest puste
-
-            addMove(move, player == 1 ? BoardElement.CROSS : BoardElement.CIRCLE);// Zakładamy, że gracz jest reprezentowany przez 1
-            if (displayBoard(player == 1 ? BoardElement.CROSS : BoardElement.CIRCLE)) {
+            addMove(move, BoardElement.getBoardElement(player));// Zakładamy, że gracz jest reprezentowany przez 1
+            displayBoard(BoardElement.getBoardElement(player));
+            // sprawdza warunki zakończenia gry
+            if (CheckStatusGame.checkWin(board, player)) {
+                System.out.println("Wygrałeś!");
+                break;
+            } else if (CheckStatusGame.isBoardFull(board)) {
+                System.out.println("Remis!");
                 break;
             }
+            removeMoveFromTableBoard(move, BoardElement.getBoardElement(player));
             player = -player;
         }
         scanner.close();

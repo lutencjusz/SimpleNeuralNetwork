@@ -22,6 +22,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class TicTacToeNeuralNetwork {
+
+    static final int TIME_OF_TRAINING_IN_MINUTES = 10;
+    static final BoardElement ROBOT_PAYER = BoardElement.CIRCLE;
+
     static List<DataModel> dataModel = new ArrayList<>();
     static List<double[]> finalInputSet = new ArrayList<>();
     static List<double[]> finalOutputSet = new ArrayList<>();
@@ -36,7 +40,7 @@ public class TicTacToeNeuralNetwork {
         for (int p0 = 0; p0 < 9; p0++) {
             if (p0 == 4) p1 = 0;
             for (int p2 = 0; p2 < 9; p2++) {
-                int player = -1;
+                int player = ROBOT_PAYER.getValue();
                 // kontrola czy nie ma powtórzeń
                 Set<Integer> sumControl = new HashSet<>();
                 sumControl.add(p0);
@@ -55,7 +59,7 @@ public class TicTacToeNeuralNetwork {
                 board[p1] = robotPlayer;
                 board[p2] = -robotPlayer;
                 do {
-                    int j = heuristicStrategy.getBestMove(board, robotPlayer == player ? BoardElement.CIRCLE : BoardElement.CROSS, true);
+                    int j = heuristicStrategy.getBestMove(board, BoardElement.getBoardElement(robotPlayer), true);
                     if (CheckStatusGame.isValidMove(board, j)) {
                         if (player == robotPlayer) {
                             inputSet.add(board.clone());
@@ -100,7 +104,7 @@ public class TicTacToeNeuralNetwork {
 
     // Metoda do gry
     public static void playGameWithPlayer(BasicNetwork network) {
-        int player = 1;
+        int player = BoardElement.CROSS.getValue();
         Scanner scanner = new Scanner(System.in);
         double[] board = new double[9]; // Początkowy stan planszy
         CheckStatusGame.displayBoard(board);
@@ -145,7 +149,7 @@ public class TicTacToeNeuralNetwork {
     }
 
     public static void playGameWithAI(BasicNetwork network) {
-        int player = 1;
+        int player = BoardElement.CROSS.getValue();
         Scanner scanner = new Scanner(System.in);
         double[] board = new double[9]; // Początkowy stan planszy
         CheckStatusGame.displayBoard(board);
@@ -195,14 +199,14 @@ public class TicTacToeNeuralNetwork {
 //            int networkMove = heuristicStrategy.getBestMove(board);
 
             finalInputSet.add(board.clone());
-            board[networkMove] = -1; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
+            board[networkMove] = BoardElement.CIRCLE.getValue();; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
             finalOutputSet.add(CheckStatusGame.convertNumberToArray(move, VALUE));
 
             // Wyświetlanie planszy
             CheckStatusGame.displayBoard(board);
 
             // Sprawdzanie, czy sieć neuronowa wygrała
-            if (CheckStatusGame.checkWin(board, -1)) {
+            if (CheckStatusGame.checkWin(board, BoardElement.CIRCLE.getValue())) {
                 System.out.println("Sieć neuronowa wygrała!");
                 System.out.println("Czy zapisać dane z gry do sieci? (t/n)");
                 String saveData = scanner.next();
@@ -231,8 +235,6 @@ public class TicTacToeNeuralNetwork {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        final int TIME_OF_TRAINING_IN_MINUTES = 10;
-
         DataIO dataIO = new DataIO();
         double[][] input = new double[0][9];
         double[][] output;
@@ -251,7 +253,7 @@ public class TicTacToeNeuralNetwork {
         network.reset();
 
         // Zbieranie danych do trenowania sieci
-        trainingNetwork(network, -1);
+        trainingNetwork(network, ROBOT_PAYER.getValue());
 
         // Zapisanie danych do pliku
 //        dataIO.saveDataToFileInJSON("dataWin.json", dataModel);

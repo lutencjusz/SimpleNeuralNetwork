@@ -132,8 +132,8 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
-            int computerMove = heuristicStrategy.getBestMove(board, false, true);
             removeMoveFromTableBoard(player.getOpposite());
+            int computerMove = heuristicStrategy.getBestMove(board, false, true);
             addMove(computerMove, player);
             displayBoard(player);
             if (CheckStatusGame.checkWin(board, player.getValue())) {

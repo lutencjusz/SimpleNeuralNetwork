@@ -21,5 +21,13 @@ public enum BoardElement {
             default -> NULL;
         };
     }
+
+    public BoardElement getOpposite() {
+        return switch (this) {
+            case CROSS -> CIRCLE;
+            case CIRCLE -> CROSS;
+            default -> NULL;
+        };
+    }
 }
 

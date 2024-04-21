@@ -7,7 +7,6 @@ import io.restassured.specification.RequestSpecification;
 import model.BoardElement;
 import org.fusesource.jansi.Ansi;
 
-import java.awt.*;
 import java.util.Arrays;
 
 public class ChatGptApi {

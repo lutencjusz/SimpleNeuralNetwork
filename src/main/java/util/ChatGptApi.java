@@ -19,6 +19,7 @@ public class ChatGptApi {
     private static final String CHAT_GPT_KEY = dotenv.get("CHAT_GPT_KEY");
     private static final String CHAT_GPT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
     private static final String JAVELIN_ENDPOINT = "http://localhost:7000";
+    private static final String SUFFIX = "Jeżeli nie znajdziesz powiązania w tym modelu Fine-tuning, prześlij w odpowiedzi tylko ciąg '[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]' bez żadnych dodatkowych komentarzy.";
 
     /**
      * Demo Javelin REST service, do uruchomienia wymagane jest uruchomienie projektu JavelinRestServiceTest
@@ -94,8 +95,8 @@ public class ChatGptApi {
 
     public static void main(String[] args) {
         String model = "ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl";
-        String message = "Na postawie Fine-tuning modelu ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl przekaż odpowiedź dla następującej konfiguracji: [1.0,1.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0]";
-//        String markdownText = getChatGPTMessage(message, model, false);
+//        String message = "Na postawie Fine-tuning modelu ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl przekaż odpowiedź dla następującej konfiguracji: [1.0,1.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0]";
+ //        String markdownText = getChatGPTMessage(message, model, false);
         int bestMove = getBestMove(model, new double[]{1.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0});
 //        System.out.println(markdownText);
         System.out.println("Najlepszy ruch: " + bestMove);

@@ -102,7 +102,7 @@ public class DataIO {
         }
     }
 
-    public void saveDataToFileInJSON(String filename, List<DataModel> data) {
+    public void saveDataToFileInJSON(String filename, List<DataModelGpt> data) {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
@@ -113,17 +113,17 @@ public class DataIO {
         }
     }
 
-    public static void addDataToFileInJSON(String filename, List<DataModel> newData) {
+    public static void addDataToFileInJSON(String filename, List<DataModelGpt> newData) {
         Gson gson = new Gson();
-        List<DataModel> allData = new ArrayList<>();
+        List<DataModelGpt> allData = new ArrayList<>();
 
         try {
             // Sprawdzenie czy plik istnieje
             if (Files.exists(Paths.get(filename))) {
                 // Odczytanie danych z pliku i zdeserializowanie do listy obiektów Model.DataModel
                 String fileContent = new String(Files.readAllBytes(Paths.get(filename)));
-                DataModel[] existingDataArray = gson.fromJson(fileContent, DataModel[].class);
-                allData.addAll(List.of(existingDataArray));
+                DataModelGpt[] existingDataGptArray = gson.fromJson(fileContent, DataModelGpt[].class);
+                allData.addAll(List.of(existingDataGptArray));
             }
 
             // Dodanie nowych danych do listy

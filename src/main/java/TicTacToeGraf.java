@@ -1,5 +1,7 @@
 import model.BoardElement;
 import model.DataModel;
+import org.fusesource.jansi.Ansi;
+import util.ChatGptApi;
 import util.CheckStatusGame;
 import util.HeuristicStrategy;
 
@@ -19,6 +21,8 @@ import static java.lang.Thread.sleep;
 public class TicTacToeGraf extends JFrame implements ActionListener {
     HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
     final boolean IS_PLAY_WITH_COMPUTER = true;
+    final boolean IS_PLAY_WITH_CHAT_GPT = true;
+    final String MODEL = "ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl";
     final int SLEEP_INTERVAL_IN_MILI = 1000;
     private BoardElement player = BoardElement.CROSS;
     private final Color CROSS_COLOR = Color.GREEN.darker();
@@ -126,6 +130,7 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
         }
         player = player.getOpposite();
         if (IS_PLAY_WITH_COMPUTER && player == BoardElement.CIRCLE) {
+            int computerMove;
             super.update(this.getGraphics());
             try {
                 sleep(SLEEP_INTERVAL_IN_MILI);
@@ -133,8 +138,17 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
                 throw new RuntimeException(ex);
             }
             removeMoveFromTableBoard(player.getOpposite());
-            int computerMove = heuristicStrategy.getBestMove(board, false, true);
-            addMove(computerMove, player);
+            if (IS_PLAY_WITH_CHAT_GPT) {
+                computerMove = ChatGptApi.getBestMove(MODEL, board);
+                if (computerMove == -1) {
+                    System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + MODEL + " nie zwrócił poprawnego ruchu!").reset() + " Korzystam z algorytmu heurystycznego.");
+                    computerMove = heuristicStrategy.getBestMove(board, player, true, true);
+                }
+                addMove(computerMove, player);
+            } else {
+                computerMove = heuristicStrategy.getBestMove(board, player, true, true);
+                addMove(computerMove, player);
+            }
             displayBoard(player);
             if (CheckStatusGame.checkWin(board, player.getValue())) {
                 System.out.println("Komputer wygrał!");

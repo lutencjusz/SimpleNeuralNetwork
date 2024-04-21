@@ -2,17 +2,20 @@ package model;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
 public class DataModel {
-    double[] input;
-    double[] output;
+    String role;
+    String content;
 
-    public DataModel(double[] doubles, double[] v) {
-        this.input = new double[9];
-        this.output = new double[9];
-        for (int i = 0; i < doubles.length; i++) {
-            this.input[i] = doubles[i];
-            this.output[i] = v[i];
-        }
+    public DataModel(String role, double[] content) {
+        this.role = role;
+        this.content = Arrays.toString(content);
+    }
+
+    public DataModel(String role, String content) {
+        this.role = role;
+        this.content = content;
     }
 }

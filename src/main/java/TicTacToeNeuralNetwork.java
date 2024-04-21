@@ -2,6 +2,7 @@ import model.BoardElement;
 import model.DataIO;
 import model.DataModel;
 import me.tongfei.progressbar.ProgressBar;
+import model.DataModelGpt;
 import org.encog.Encog;
 import org.encog.engine.network.activation.ActivationSigmoid;
 import org.encog.ml.data.MLData;
@@ -29,7 +30,9 @@ public class TicTacToeNeuralNetwork {
     static final int TIME_OF_TRAINING_IN_MINUTES = 10;
     static final BoardElement ROBOT_PAYER = BoardElement.CIRCLE;
 
+    static final String SYSTEM_MESSAGE = "Oprzyj rozwiązanie na modelu treningowym fine-tuningu GPT-3.0";
     static List<DataModel> dataModel = new ArrayList<>();
+    static List<DataModelGpt> dataModelGptList = new ArrayList<>();
     static List<double[]> finalInputSet = new ArrayList<>();
     static List<double[]> finalOutputSet = new ArrayList<>();
     static final double VALUE = -1;
@@ -37,7 +40,7 @@ public class TicTacToeNeuralNetwork {
     static HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
 
 
-    // Metoda do trenowania sieci neuronowej
+    // Trenowanie sieci neuronowej
     public static void trainingNetwork(BasicNetwork network, int robotPlayer) {
         int p1 = 4;
         for (int p0 = 0; p0 < 9; p0++) {
@@ -93,15 +96,18 @@ public class TicTacToeNeuralNetwork {
             }
         }
         System.out.println("Przygotowanie danych zakończone!");
-        convertArraysToDataModel(CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
+        convertArraysToDataModel(SYSTEM_MESSAGE, CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
         System.out.println("Konwersja do JSON zakończona!");
 
     }
 
-    public static void convertArraysToDataModel(double[][] input, double[][] output) {
+    public static void convertArraysToDataModel(String systemMessage, double[][] input, double[][] output) {
+        DataModel[] messagesStructure = new DataModel[3];
         for (int i = 0; i < input.length; i++) {
-            DataModel newModel = new DataModel(input[i], output[i]);
-            dataModel.add(newModel);
+            messagesStructure[0] = new DataModel("system", systemMessage);
+            messagesStructure[1] = new DataModel("user", input[i]);
+            messagesStructure[2] = new DataModel("assistant", output[i]);
+            dataModelGptList.add(new DataModelGpt(messagesStructure));
         }
     }
 
@@ -139,8 +145,8 @@ public class TicTacToeNeuralNetwork {
                 System.out.println("Czy zapisać dane z gry do sieci? (t/n)");
                 String saveData = scanner.next();
                 if (saveData.equals("t")) {
-                    convertArraysToDataModel(CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
-                    DataIO.addDataToFileInJSON("dataWin.json", dataModel);
+                    convertArraysToDataModel(SYSTEM_MESSAGE, CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
+                    DataIO.addDataToFileInJSON("dataWin.json", dataModelGptList);
                 }
                 break;
             }
@@ -202,7 +208,8 @@ public class TicTacToeNeuralNetwork {
 //            int networkMove = heuristicStrategy.getBestMove(board);
 
             finalInputSet.add(board.clone());
-            board[networkMove] = BoardElement.CIRCLE.getValue();; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
+            board[networkMove] = BoardElement.CIRCLE.getValue();
+            ; // Zakładamy, że sieć neuronowa jest reprezentowana przez -1
             finalOutputSet.add(CheckStatusGame.convertNumberToArray(move, VALUE));
 
             // Wyświetlanie planszy
@@ -214,8 +221,8 @@ public class TicTacToeNeuralNetwork {
                 System.out.println("Czy zapisać dane z gry do sieci? (t/n)");
                 String saveData = scanner.next();
                 if (saveData.equals("t")) {
-                    convertArraysToDataModel(CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
-                    DataIO.addDataToFileInJSON("dataWin.json", dataModel);
+                    convertArraysToDataModel(SYSTEM_MESSAGE, CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
+                    DataIO.addDataToFileInJSON("dataWinGpt.json", dataModelGptList);
                 }
                 break;
             }
@@ -260,7 +267,7 @@ public class TicTacToeNeuralNetwork {
 
         // Zapisanie danych do pliku
 //        dataIO.saveDataToFileInJSON("dataWin.json", dataModel);
-        dataIO.saveDataToFileInJSON("dataTraining.json", dataModel);
+        dataIO.saveDataToFileInJSON("dataTrainingGpt.json", dataModelGptList);
 
 //        input = dataIO.loadInputData("nInput.dat");
 //        output = dataIO.loadOutputData("nOutput.dat");

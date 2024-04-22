@@ -22,7 +22,7 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
     HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
     final boolean IS_PLAY_WITH_COMPUTER = true;
     final boolean IS_PLAY_WITH_CHAT_GPT = true;
-    final String MODEL = "ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl";
+    final String MODEL = "ft:gpt-3.5-turbo-0125:sopim::9GtwzwMW";
     final int SLEEP_INTERVAL_IN_MILI = 1000;
     private BoardElement player = BoardElement.CROSS;
     private final Color CROSS_COLOR = Color.GREEN.darker();

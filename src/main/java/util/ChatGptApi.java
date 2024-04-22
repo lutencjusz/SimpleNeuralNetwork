@@ -76,7 +76,7 @@ public class ChatGptApi {
         String response;
 
         System.out.println("\nStan planszy przed ruchem AI: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(Arrays.toString(board)).reset());
-        String message = "Na postawie Fine-tuning modelu " + model + " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) + SUFFIX;
+        String message = "Na postawie Fine-tuning modelu " + model + " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","") + SUFFIX;
         response = getChatGPTMessage(message, model, false);
         System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
         chatGptMove = convertBoardToInt(response);
@@ -85,7 +85,7 @@ public class ChatGptApi {
             System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " zwrócił niedozwolony ruch!").reset()
                     + " Powtarzam prośbę o odpowiedź...");
             message = "Zaproponowana odpowiedź jest niepoprawna. Na postawie Fine-tuning modelu " + model +
-                    " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) +
+                    " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","") +
                     " inną niż: " + response + SUFFIX;
             response = getChatGPTMessage(message, model, false);
             System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
@@ -96,8 +96,8 @@ public class ChatGptApi {
         if (chatGptMove != heuristicsMove) {
             System.out.println("Ruch zaproponowany przez Heurystykę: " + Ansi.ansi().fg(heuristicsMove > 0 ? Ansi.Color.GREEN : Ansi.Color.RED).a(heuristicsMove).reset());
             System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " nie zwrócił poprawnego ruchu!").reset() + " Sprawdzam jeszcze raz...");
-            message = "Sprawdź jeszcze raz, czy odpowiedź " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1))
-                    + " nie jest lepsza, przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board)
+            message = "Sprawdź jeszcze raz, czy odpowiedź " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)).replace(" ","")
+                    + " nie jest lepsza, przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","")
                     + ". Jeżeli potwierdzasz, że odpowiedź " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)) + " jest najlepsza, to zwróć tylko samą konfigurację, bez dodatkowych informacji.";
             response = getChatGPTMessage(message, model, false);
             System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
@@ -106,8 +106,8 @@ public class ChatGptApi {
             while (!CheckStatusGame.isValidMove(board, chatGptMove) && chatGptMove != -1) {
                 System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " zwrócił niedozwolony ruch!").reset() + " Powtarzam prośbę o odpowiedź...");
                 message = "Zaproponowana odpowiedź jest niepoprawna. Na postawie Fine-tuning modelu " + model +
-                        " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) +
-                        " inną niż: " + response + "Zastanów się, czy jednak " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)) +
+                        " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","") +
+                        " inną niż: " + response + "Zastanów się, czy jednak " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)).replace(" ","") +
                         ". Jeżeli jest, to zwróć tylko samą konfigurację, bez dodatkowych informacji" + SUFFIX;
                 response = getChatGPTMessage(message, model, false);
                 System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());

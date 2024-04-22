@@ -31,7 +31,6 @@ public class TicTacToeNeuralNetwork {
     static final BoardElement ROBOT_PAYER = BoardElement.CIRCLE;
 
     static final String SYSTEM_MESSAGE = "Oprzyj rozwiązanie na modelu treningowym fine-tuningu GPT-3.0";
-    static List<DataModel> dataModel = new ArrayList<>();
     static List<DataModelGpt> dataModelGptList = new ArrayList<>();
     static List<double[]> finalInputSet = new ArrayList<>();
     static List<double[]> finalOutputSet = new ArrayList<>();
@@ -102,8 +101,8 @@ public class TicTacToeNeuralNetwork {
     }
 
     public static void convertArraysToDataModel(String systemMessage, double[][] input, double[][] output) {
-        DataModel[] messagesStructure = new DataModel[3];
         for (int i = 0; i < input.length; i++) {
+            DataModel[] messagesStructure = new DataModel[3];
             messagesStructure[0] = new DataModel("system", systemMessage);
             messagesStructure[1] = new DataModel("user", input[i]);
             messagesStructure[2] = new DataModel("assistant", output[i]);

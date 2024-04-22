@@ -30,7 +30,7 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
     private final Color CIRCLE_COLOR = Color.pink;
     private final Color LIGHT_CIRCLE_COLOR = Color.red;
     private final Color DISAPPER_COLOR = Color.gray;
-    private double[] board = new double[9];
+    static double[] board = new double[9];
     private java.util.List<DataModel> dataModel = new ArrayList<>();
     private java.util.List<double[]> finalInputSet = new ArrayList<>();
     private List<double[]> finalOutputSet = new ArrayList<>();
@@ -144,11 +144,10 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
                     System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + MODEL + " nie zwrócił poprawnego ruchu!").reset() + " Korzystam z algorytmu heurystycznego.");
                     computerMove = heuristicStrategy.getBestMove(board, player, true, true);
                 }
-                addMove(computerMove, player);
             } else {
                 computerMove = heuristicStrategy.getBestMove(board, player, true, true);
-                addMove(computerMove, player);
             }
+            addMove(computerMove, player);
             displayBoard(player);
             if (CheckStatusGame.checkWin(board, player.getValue())) {
                 System.out.println("Komputer wygrał!");

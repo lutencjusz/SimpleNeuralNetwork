@@ -18,7 +18,7 @@ public class ChatGptApi {
     private static final String CHAT_GPT_KEY = dotenv.get("CHAT_GPT_KEY");
     private static final String CHAT_GPT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
     private static final String JAVELIN_ENDPOINT = "http://localhost:7000";
-    private static final String SUFFIX = "Jeżeli nie znajdziesz powiązania w tym modelu Fine-tuning, prześlij w odpowiedzi tylko ciąg '[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]' bez żadnych dodatkowych komentarzy.";
+    private static final String SUFFIX = ". Odpowiedź może składać się tylko z tablicy typu double[9], gdzie tylko jeden może mieć wartość 1.0, reszta to 0.0. Inne wartości są niedozwolone.";
 
     /**
      * Demo Javelin REST service, do uruchomienia wymagane jest uruchomienie projektu JavelinRestServiceTest
@@ -72,11 +72,26 @@ public class ChatGptApi {
 
     public static int getBestMove(String model, double[] board) {
         HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
-        String message = "Na postawie Fine-tuning modelu " + model + " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board);
-        String response = getChatGPTMessage(message, model, false);
+        int chatGptMove;
+        String response;
+
+        System.out.println("\nStan planszy przed ruchem AI: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(Arrays.toString(board)).reset());
+        String message = "Na postawie Fine-tuning modelu " + model + " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) + SUFFIX;
+        response = getChatGPTMessage(message, model, false);
         System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
-        int chatGptMove = convertBoardToInt(response);
+        chatGptMove = convertBoardToInt(response);
         System.out.println("Ruch zaproponowany przez ChatGPT: " + Ansi.ansi().fg(chatGptMove > -1 ? Ansi.Color.GREEN : Ansi.Color.RED).a(chatGptMove).reset());
+        while (!CheckStatusGame.isValidMove(board, chatGptMove) && chatGptMove != -1) {
+            System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " zwrócił niedozwolony ruch!").reset()
+                    + " Powtarzam prośbę o odpowiedź...");
+            message = "Zaproponowana odpowiedź jest niepoprawna. Na postawie Fine-tuning modelu " + model +
+                    " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) +
+                    " inną niż: " + response + SUFFIX;
+            response = getChatGPTMessage(message, model, false);
+            System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
+            chatGptMove = convertBoardToInt(response);
+            System.out.println("Ruch zaproponowany przez ChatGPT: " + Ansi.ansi().fg(chatGptMove > -1 ? Ansi.Color.GREEN : Ansi.Color.RED).a(chatGptMove).reset());
+        }
         int heuristicsMove = heuristicStrategy.getBestMove(board, BoardElement.CIRCLE, false, true);
         if (chatGptMove != heuristicsMove) {
             System.out.println("Ruch zaproponowany przez Heurystykę: " + Ansi.ansi().fg(heuristicsMove > 0 ? Ansi.Color.GREEN : Ansi.Color.RED).a(heuristicsMove).reset());
@@ -88,14 +103,25 @@ public class ChatGptApi {
             System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
             chatGptMove = convertBoardToInt(response);
             System.out.println("Ponownie zaproponowany ruch przez ChatGPT: " + Ansi.ansi().fg(chatGptMove > 0 ? Ansi.Color.GREEN : Ansi.Color.RED).a(chatGptMove).reset());
+            while (!CheckStatusGame.isValidMove(board, chatGptMove) && chatGptMove != -1) {
+                System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " zwrócił niedozwolony ruch!").reset() + " Powtarzam prośbę o odpowiedź...");
+                message = "Zaproponowana odpowiedź jest niepoprawna. Na postawie Fine-tuning modelu " + model +
+                        " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) +
+                        " inną niż: " + response + "Zastanów się, czy jednak " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)) +
+                        ". Jeżeli jest, to zwróć tylko samą konfigurację, bez dodatkowych informacji" + SUFFIX;
+                response = getChatGPTMessage(message, model, false);
+                System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
+                chatGptMove = convertBoardToInt(response);
+                System.out.println("Ruch zaproponowany przez ChatGPT: " + Ansi.ansi().fg(chatGptMove > -1 ? Ansi.Color.GREEN : Ansi.Color.RED).a(chatGptMove).reset());
+            }
         }
         return chatGptMove;
     }
 
     public static void main(String[] args) {
         String model = "ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl";
-//        String message = "Na postawie Fine-tuning modelu ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl przekaż odpowiedź dla następującej konfiguracji: [1.0,1.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0]";
- //        String markdownText = getChatGPTMessage(message, model, false);
+//        String message = "Na postawie Fine-tuning modelu ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl przekaż odpowiedź dla następującej konfiguracji: [1.0,1.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0]" + SUFFIX;
+        //        String markdownText = getChatGPTMessage(message, model, false);
         int bestMove = getBestMove(model, new double[]{1.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0});
 //        System.out.println(markdownText);
         System.out.println("Najlepszy ruch: " + bestMove);

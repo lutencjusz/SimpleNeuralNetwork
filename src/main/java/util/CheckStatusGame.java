@@ -23,6 +23,9 @@ public class CheckStatusGame {
     }
 
     public static boolean isValidMove(double[] board, int move) {
+        if (move < 0 || move > 8) {
+            return false;
+        }
         return board[move] == 0;
     }
 

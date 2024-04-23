@@ -43,7 +43,8 @@ public class ChatGptApi {
 
         String requestBody = "{"
                 + "\"model\": \"" + model + "\","
-                + "\"messages\": [{\"role\": \"user\", \"content\": \"" + message + "\"}]"
+                + "\"messages\": [{\"role\": \"user\", \"content\": \"" + message + "\"}],"
+                + "\"temperature\": 0"
                 + "}";
 
         Response response = request
@@ -62,6 +63,7 @@ public class ChatGptApi {
 
     private static int convertBoardToInt(String board) {
         String[] resultTable;
+        if (board.contains("-1.0")) return -1;
         try {
             resultTable = board.trim().replace("]", "").replace("[", "").replace(" ", "").split(",");
         } catch (Exception e) {
@@ -76,7 +78,8 @@ public class ChatGptApi {
         String response;
 
         System.out.println("\nStan planszy przed ruchem AI: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(Arrays.toString(board)).reset());
-        String message = "Na postawie Fine-tuning modelu " + model + " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","") + SUFFIX;
+//        String message = "Na postawie Fine-tuning modelu " + model + " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) + SUFFIX;
+        String message = Arrays.toString(board);
         response = getChatGPTMessage(message, model, false);
         System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
         chatGptMove = convertBoardToInt(response);
@@ -85,7 +88,7 @@ public class ChatGptApi {
             System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " zwrócił niedozwolony ruch!").reset()
                     + " Powtarzam prośbę o odpowiedź...");
             message = "Zaproponowana odpowiedź jest niepoprawna. Na postawie Fine-tuning modelu " + model +
-                    " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","") +
+                    " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) +
                     " inną niż: " + response + SUFFIX;
             response = getChatGPTMessage(message, model, false);
             System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
@@ -96,8 +99,8 @@ public class ChatGptApi {
         if (chatGptMove != heuristicsMove) {
             System.out.println("Ruch zaproponowany przez Heurystykę: " + Ansi.ansi().fg(heuristicsMove > 0 ? Ansi.Color.GREEN : Ansi.Color.RED).a(heuristicsMove).reset());
             System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " nie zwrócił poprawnego ruchu!").reset() + " Sprawdzam jeszcze raz...");
-            message = "Sprawdź jeszcze raz, czy odpowiedź " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)).replace(" ","")
-                    + " nie jest lepsza, przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","")
+            message = "Sprawdź jeszcze raz, czy odpowiedź " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1))
+                    + " nie jest lepsza, przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board)
                     + ". Jeżeli potwierdzasz, że odpowiedź " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)) + " jest najlepsza, to zwróć tylko samą konfigurację, bez dodatkowych informacji.";
             response = getChatGPTMessage(message, model, false);
             System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
@@ -106,8 +109,8 @@ public class ChatGptApi {
             while (!CheckStatusGame.isValidMove(board, chatGptMove) && chatGptMove != -1) {
                 System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a("Chat GPT dla modelu " + model + " zwrócił niedozwolony ruch!").reset() + " Powtarzam prośbę o odpowiedź...");
                 message = "Zaproponowana odpowiedź jest niepoprawna. Na postawie Fine-tuning modelu " + model +
-                        " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board).replace(" ","") +
-                        " inną niż: " + response + "Zastanów się, czy jednak " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)).replace(" ","") +
+                        " przekaż odpowiedź dla następującej konfiguracji: " + Arrays.toString(board) +
+                        " inną niż: " + response + "Zastanów się, czy jednak " + Arrays.toString(CheckStatusGame.convertNumberToArray(heuristicsMove, 1)) +
                         ". Jeżeli jest, to zwróć tylko samą konfigurację, bez dodatkowych informacji" + SUFFIX;
                 response = getChatGPTMessage(message, model, false);
                 System.out.println("Response: " + Ansi.ansi().fg(Ansi.Color.YELLOW).a(response).reset());
@@ -119,7 +122,7 @@ public class ChatGptApi {
     }
 
     public static void main(String[] args) {
-        String model = "ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl";
+        String model = "ft:gpt-3.5-turbo-0125:sopim::9HFtJnar";
 //        String message = "Na postawie Fine-tuning modelu ft:gpt-3.5-turbo-0125:sopim::9GNLB0jl przekaż odpowiedź dla następującej konfiguracji: [1.0,1.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0]" + SUFFIX;
         //        String markdownText = getChatGPTMessage(message, model, false);
         int bestMove = getBestMove(model, new double[]{1.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0});

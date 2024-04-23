@@ -137,7 +137,6 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
-            removeMoveFromTableBoard(player.getOpposite());
             if (IS_PLAY_WITH_CHAT_GPT) {
                 computerMove = ChatGptApi.getBestMove(MODEL, board);
                 if (computerMove == -1) {
@@ -148,6 +147,7 @@ public class TicTacToeGraf extends JFrame implements ActionListener {
                 computerMove = heuristicStrategy.getBestMove(board, player, true, true);
             }
             addMove(computerMove, player);
+            removeMoveFromTableBoard(player.getOpposite());
             displayBoard(player);
             if (CheckStatusGame.checkWin(board, player.getValue())) {
                 System.out.println("Komputer wygrał!");

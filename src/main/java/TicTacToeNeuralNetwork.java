@@ -34,7 +34,7 @@ public class TicTacToeNeuralNetwork {
     static List<DataModelGpt> dataModelGptList = new ArrayList<>();
     static List<double[]> finalInputSet = new ArrayList<>();
     static List<double[]> finalOutputSet = new ArrayList<>();
-    static final double VALUE = -1;
+    static final double VALUE = 1;
     static final double TRAINING_WEIGHT = 1;
     static HeuristicStrategy heuristicStrategy = new HeuristicStrategy();
 
@@ -242,11 +242,57 @@ public class TicTacToeNeuralNetwork {
         return bestMove;
     }
 
+    public static double[] convertStringToDoubleArray(String input) {
+        String[] stringNumbers = input.trim().split(",");
+        double[] result = new double[stringNumbers.length];
+        for (int i = 0; i < stringNumbers.length; i++) {
+            try {
+                result[i] = Double.parseDouble(stringNumbers[i].trim().replace("[", "").replace("]", ""));
+            } catch (NumberFormatException e) {
+                System.out.println("Błąd przy konwersji: '" + stringNumbers[i] + "' nie jest liczbą.");
+                return null;
+            }
+        }
+        return result;
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
 
         DataIO dataIO = new DataIO();
         double[][] input = new double[0][9];
         double[][] output;
+        Set<String> dataContent = new HashSet<>();
+
+        // Załadowanie danych z pliku
+        List<DataModelGpt> data = DataIO.loadJsonFileToData("dataTrainingGpt.json");
+        Set<DataModelGpt> dataModelGptSet = new HashSet<>();
+
+        for (DataModelGpt dataModelGpt : data) {
+            for (DataModel dataModel : dataModelGpt.getMessages()) {
+                if (dataModel.getRole().equals("user")) {
+                    if (!dataContent.contains(Arrays.toString(dataModel.getContent().toCharArray()))) {
+                        dataContent.add(Arrays.toString(dataModel.getContent().toCharArray()));
+                        dataModelGptSet.add(dataModelGpt);
+                    }
+                }
+            }
+        }
+
+        for (DataModelGpt dataModelGpt : dataModelGptSet) {
+            double[] boardUser = new double[9];
+            for (int i = 0; i < dataModelGpt.getMessages().length; i++) {
+                if (dataModelGpt.getMessages()[i].getRole().equals("user")) {
+                    boardUser = convertStringToDoubleArray(dataModelGpt.getMessages()[i].getContent());
+                    finalInputSet.add(boardUser);
+                } else if (dataModelGpt.getMessages()[i].getRole().equals("assistant")) {
+                    int move = heuristicStrategy.getBestMove(boardUser, BoardElement.CIRCLE, false, true);
+                    finalOutputSet.add(CheckStatusGame.convertNumberToArray(move, VALUE));
+                }
+            }
+        }
+
+        convertArraysToDataModel(SYSTEM_MESSAGE, CheckStatusGame.convertListToArray(finalInputSet), CheckStatusGame.convertListToArray(finalOutputSet));
+        dataIO.saveDataToFileInJSON("dataTrainingGptH.json", dataModelGptList);
 
 //        // Generowanie i zapis danych treningowych
 //        dataIO.generateDataIO();

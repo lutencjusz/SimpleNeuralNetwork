@@ -2,12 +2,15 @@ package model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class DataIO {
 
@@ -111,6 +114,20 @@ public class DataIO {
         } catch (IOException e) {
             System.out.println("Błąd przy zapisie: " + e.getMessage());
         }
+    }
+
+    public static List<DataModelGpt> loadJsonFileToData(String filePath) {
+        List<DataModelGpt> data = null;
+        Gson gson = new Gson();
+        try (FileReader reader = new FileReader(filePath)) {
+            Type listType = new TypeToken<List<DataModelGpt>>(){}.getType();
+            data = gson.fromJson(reader, listType);
+            data.forEach(System.out::println);
+        } catch (IOException e) {
+            System.out.println("Błąd przy odczycie: " + e.getMessage());
+        }
+        assert data != null;
+        return data;
     }
 
     public static void addDataToFileInJSON(String filename, List<DataModelGpt> newData) {

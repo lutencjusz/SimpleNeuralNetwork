@@ -302,17 +302,17 @@ public class TicTacToeNeuralNetwork {
         // Tworzenie sieci neuronowej
         BasicNetwork network = new BasicNetwork();
         network.addLayer(new BasicLayer(null, true, 9)); // 9 wejść (3x3 plansza)
-        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 144)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
+        network.addLayer(new BasicLayer(new ActivationSigmoid(), true, 256)); // Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronamiukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami// Warstwa ukryta z 18 neuronami
         network.addLayer(new BasicLayer(new ActivationSigmoid(), false, 9)); // 9 wyjść (3x3 plansza)
         network.getStructure().finalizeStructure();
         network.reset();
 
         // Zbieranie danych do trenowania sieci
-        trainingNetwork(network, ROBOT_PAYER.getValue());
+//        trainingNetwork(network, ROBOT_PAYER.getValue());
 
         // Zapisanie danych do pliku
 //        dataIO.saveDataToFileInJSON("dataWin.json", dataModel);
-        dataIO.saveDataToFileInJSON("dataTrainingGpt.json", dataModelGptList);
+//        dataIO.saveDataToFileInJSON("dataTrainingGpt.json", dataModelGptList);
 
 //        input = dataIO.loadInputData("nInput.dat");
 //        output = dataIO.loadOutputData("nOutput.dat");
